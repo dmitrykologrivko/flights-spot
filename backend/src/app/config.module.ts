@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from './config.service';
 
+@Global()
 @Module({
     providers: [
         {
@@ -12,4 +13,4 @@ import { ConfigService } from './config.service';
         ConfigService,
     ],
 })
-export class CoreModule {}
+export class ConfigModule {}
