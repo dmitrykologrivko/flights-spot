@@ -1,6 +1,6 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigService } from '../config/config.service';
-import { parsePostgresURL } from './database.utils';
+import { ConfigService } from '@common/config/config.service';
+import { parsePostgresURL } from '@common/database/database.utils';
 
 export const DatabaseModule = TypeOrmModule.forRootAsync({
     imports: [ConfigService],

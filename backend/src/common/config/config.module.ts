@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { ConfigService, DEVELOPMENT_ENVIRONMENT } from './config.service';
+import { ConfigService, DEVELOPMENT_ENVIRONMENT } from '@common/config/config.service';
 
 @Global()
 @Module({

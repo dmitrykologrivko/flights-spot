@@ -1,4 +1,4 @@
-import { DatabaseConfig } from './database.interfaces';
+import DatabaseConfig from '@common/database/database-config.interface';
 
 export function parsePostgresURL(url: string = ''): DatabaseConfig {
     const PATTERN = /^postgres:\/\/(.*):(.*)@([a-zA-Z0-9.]+):([0-9]{1,5})\/([a-zA-Z0-9\-_]+)$/;

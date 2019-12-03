@@ -1,5 +1,5 @@
-import { parsePostgresURL } from './database.utils';
-import { DatabaseConfig } from './database.interfaces';
+import { parsePostgresURL } from '@common/database/database.utils';
+import DatabaseConfig from '@common/database/database-config.interface';
 
 describe('parsePostgresURL', () => {
     const ERROR_MESSAGE = 'Provided URL does not match with Postgres URL pattern: ' +

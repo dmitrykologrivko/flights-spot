@@ -11,7 +11,8 @@
     "baseUrl": "./",
     "incremental": true,
     "paths": {
-        "@app/*": ["src/app/*"]
+        "@app/*": ["src/*"],
+        "@common/*": ["src/common/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
