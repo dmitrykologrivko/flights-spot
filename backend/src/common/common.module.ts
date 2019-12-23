@@ -10,6 +10,6 @@ import commonConfig from './common.config';
         PropertyConfigModule,
         DatabaseModule,
     ],
-    //exports: [PropertyConfigModule],
+    exports: [PropertyConfigModule],
 })
 export class CommonModule {}
