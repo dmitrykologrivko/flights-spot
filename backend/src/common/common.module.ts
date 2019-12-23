@@ -1,9 +1,15 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule } from '@common/config/config.module';
-import { DatabaseModule } from '@common/database/database.module';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { PropertyConfigModule } from './config';
+import { DatabaseModule } from './database';
+import commonConfig from './common.config';
 
 @Module({
-    imports: [ConfigModule, DatabaseModule],
-    exports: [ConfigModule, DatabaseModule],
+    imports: [
+        ConfigModule.forFeature(commonConfig),
+        PropertyConfigModule,
+        DatabaseModule,
+    ],
+    //exports: [PropertyConfigModule],
 })
 export class CommonModule {}

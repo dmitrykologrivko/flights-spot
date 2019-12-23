@@ -1,10 +1,23 @@
 import { Module } from '@nestjs/common';
-import { AppController } from '@app/app.controller';
-import { AppService } from '@app/app.service';
+import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '@common/common.module';
+import { PRODUCTION_ENVIRONMENT, DEVELOPMENT_ENVIRONMENT } from '@common/constants';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import appConfig from './app.config';
+
+const configOptions = {
+  isGlobal: true,
+  ignoreEnvFile: process.env.NODE_ENV === PRODUCTION_ENVIRONMENT,
+  envFilePath: `${process.env.NODE_ENV || DEVELOPMENT_ENVIRONMENT}.env`,
+  load: [appConfig],
+};
 
 @Module({
-  imports: [CommonModule],
+  imports: [
+      ConfigModule.forRoot(configOptions),
+      CommonModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

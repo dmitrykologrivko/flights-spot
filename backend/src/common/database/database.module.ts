@@ -1,22 +1,17 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigService } from '@common/config/config.service';
-import { parsePostgresURL } from '@common/database/database.utils';
+import { PropertyConfigService } from '../config';
+import { DATABASE_PROPERTY } from '../constants';
 
 export const DatabaseModule = TypeOrmModule.forRootAsync({
-    imports: [ConfigService],
-    useFactory: (config: ConfigService) => {
-        const databaseConfig = parsePostgresURL(config.getDatabaseUrl());
+    imports: [PropertyConfigService],
+    useFactory: (config: PropertyConfigService) => {
+        const options = config.get(DATABASE_PROPERTY);
 
-        return {
-            type: 'postgres',
-            host: databaseConfig.host,
-            port: databaseConfig.port,
-            username: databaseConfig.username,
-            password: databaseConfig.password,
-            database: databaseConfig.database,
-            entities: [],
-            synchronize: true,
-        };
+        if (!options) {
+            throw new Error('Database config is not defined! Please put it in your application config.');
+        }
+
+        return options;
     },
-    inject: [ConfigService],
+    inject: [PropertyConfigService],
 });
