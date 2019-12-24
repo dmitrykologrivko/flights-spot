@@ -1,4 +1,4 @@
-import { PrimaryGeneratedColumn, Column } from 'typeorm';
+import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { TimeStamped } from './time-stamped.interface';
 
 export abstract class BaseEntity implements TimeStamped {
@@ -6,9 +6,9 @@ export abstract class BaseEntity implements TimeStamped {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'timestamp' })
+    @CreateDateColumn()
     created: Date;
 
-    @Column({ type: 'timestamp' })
+    @UpdateDateColumn()
     updated: Date;
 }

@@ -12,7 +12,8 @@
     "incremental": true,
     "paths": {
         "@app/*": ["src/*"],
-        "@common/*": ["src/common/*"]
+        "@common/*": ["src/common/*"],
+        "@auth/*": ["src/auth/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
