@@ -12,17 +12,30 @@ export class Group extends BaseEntity {
     @JoinTable()
     permissions: Permission[];
 
+    /**
+     * Checks if group has permission
+     * @param codename {string} Permission codename
+     * @returns {boolean}
+     */
     hasPermission(codename: string) {
         return !!this.permissions.find(permission => permission.codename === codename);
     }
 
+    /**
+     * Sets permission to group
+     * @param permission {Permission}
+     */
     setPermission(permission: Permission) {
         if (!this.hasPermission(permission.codename)) {
             this.permissions.push(permission);
         }
     }
 
-    popPermission(codename: string) {
+    /**
+     * Unset permission for group
+     * @param codename {string} Permission codename
+     */
+    unsetPermission(codename: string) {
         this.permissions = this.permissions.filter(permission => permission.codename !== codename);
     }
 }

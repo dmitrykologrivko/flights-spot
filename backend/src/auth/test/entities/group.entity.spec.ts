@@ -57,11 +57,11 @@ describe('GroupEntity', () => {
         });
     });
 
-    describe('#popPermission()', () => {
+    describe('#unsetPermission()', () => {
         it('should pop permission', () => {
             expectInitialPermissions();
 
-            group.popPermission(writePermission.codename);
+            group.unsetPermission(writePermission.codename);
 
             expectPermissionsCount(1, group);
             expectHasPermission(readPermission, group);
@@ -71,7 +71,7 @@ describe('GroupEntity', () => {
         it('when permission is not set should not modify existing permissions', () => {
             expectInitialPermissions();
 
-            group.popPermission('write_users');
+            group.unsetPermission('write_users');
 
             expectInitialPermissions();
         });

@@ -39,22 +39,47 @@ export class User extends BaseEntity {
     @JoinTable()
     permissions: Permission[];
 
+    /**
+     * Returns full name (first and last name) of user
+     * @returns {string}
+     */
     getFullName() {
         return `${this.firstName} ${this.lastName}`;
     }
 
+    /**
+     * Returns short name (first name) of user
+     * @returns {string}
+     */
     getShortName() {
         return this.firstName;
     }
 
-    async setPassword(password: string, saltRounds) {
+    /**
+     * Sets password hash from plain password
+     * @param {string} password Plain password
+     * @param saltRounds {number} Salt Rounds
+     * @returns {Promise}
+     */
+    async setPassword(password: string, saltRounds: number) {
         this.password = await bcrypt.hash(password, saltRounds);
     }
 
+    /**
+     * Compares plain password with existing user`s password hash
+     * @param password {string} Plain password
+     * @returns {Promise}
+     */
     async comparePassword(password: string) {
         return await bcrypt.compare(password, this.password);
     }
 
+    /**
+     * Checks if user or one of user`s group has permission.
+     * If user is active superuser always returns true.
+     * @param {string} codename Permission codename
+     * @returns {boolean}
+     */
     hasPermission(codename: string) {
         // Active superusers users have all permissions
         if (this.isActive && this.isSuperuser) {
@@ -74,22 +99,38 @@ export class User extends BaseEntity {
         return false;
     }
 
+    /**
+     * Assigns permission to user
+     * @param permission {Permission}
+     */
     assignPermission(permission: Permission) {
         if (!this.findPermission(permission.codename, this.permissions)) {
             this.permissions.push(permission);
         }
     }
 
+    /**
+     * Refuses permission for user
+     * @param codename {string} Permission codename
+     */
     refusePermission(codename: string) {
         this.permissions = this.permissions.filter(permission => permission.codename !== codename);
     }
 
+    /**
+     * Sets group to user
+     * @param group {Group}
+     */
     setGroup(group: Group) {
         if (!this.findGroup(group)) {
             this.groups.push(group);
         }
     }
 
+    /**
+     * Unset group for user
+     * @param group {Group}
+     */
     unsetGroup(group: Group) {
         this.groups = this.groups.filter(currentGroup => currentGroup.id !== group.id);
     }

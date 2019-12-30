@@ -4,8 +4,8 @@ import {
     expectHasPermission,
     expectHasNoPermission,
     expectPermissionsCount,
-    exceptGroupsCount,
-    exceptHasGroup,
+    expectGroupsCount,
+    expectHasGroup,
 } from '../expect.utils';
 
 describe('UserEntity', () => {
@@ -170,7 +170,7 @@ describe('UserEntity', () => {
 
     describe('#setGroup()', () => {
         it('should set new group', () => {
-            exceptInitialGroups();
+            expectInitialGroups();
 
             const newGroup = new Group();
             newGroup.id = 2;
@@ -178,30 +178,30 @@ describe('UserEntity', () => {
 
             user.setGroup(newGroup);
 
-            exceptGroupsCount(2, user);
-            exceptHasGroup(newGroup, user);
+            expectGroupsCount(2, user);
+            expectHasGroup(newGroup, user);
         });
 
         it('when group already set should not duplicate', () => {
-            exceptInitialGroups();
+            expectInitialGroups();
 
             user.setGroup(group);
 
-            exceptInitialGroups();
+            expectInitialGroups();
         });
     });
 
     describe('#unsetGroup()', () => {
         it('should unset group', () => {
-            exceptInitialGroups();
+            expectInitialGroups();
 
             user.unsetGroup(group);
 
-            exceptGroupsCount(0, user);
+            expectGroupsCount(0, user);
         });
 
         it('when group is not set should not modify existing groups', () => {
-            exceptInitialGroups();
+            expectInitialGroups();
 
             const newGroup = new Group();
             newGroup.id = 2;
@@ -209,7 +209,7 @@ describe('UserEntity', () => {
 
             user.unsetGroup(newGroup);
 
-            exceptInitialGroups();
+            expectInitialGroups();
         });
     });
 
@@ -220,8 +220,8 @@ describe('UserEntity', () => {
         expectHasPermission(readPermission, group);
     };
 
-    const exceptInitialGroups = () => {
-        exceptGroupsCount(1, user);
-        exceptHasGroup(group, user);
+    const expectInitialGroups = () => {
+        expectGroupsCount(1, user);
+        expectHasGroup(group, user);
     };
 });

@@ -14,11 +14,11 @@ export function expectPermissionsCount(expectedCount: number, entity: User | Gro
     expect(entity.permissions.length).toBe(expectedCount);
 }
 
-export function exceptGroupsCount(expectedCount: number, user: User) {
+export function expectGroupsCount(expectedCount: number, user: User) {
     expect(user.groups.length).toBe(expectedCount);
 }
 
-export function exceptHasGroup(group: Group, user: User) {
+export function expectHasGroup(group: Group, user: User) {
     expect(user.groups.find(currentGroup => currentGroup.id === group.id))
         .toBe(group);
 }
