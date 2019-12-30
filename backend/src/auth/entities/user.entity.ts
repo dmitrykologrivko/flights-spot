@@ -10,7 +10,7 @@ export class User extends BaseEntity {
     @Column({ length: 150, unique: true })
     username: string;
 
-    @Column({ length: 128 })
+    @Column({ length: 128, select: false })
     password: string;
 
     @Column({ length: 254 })
@@ -27,6 +27,9 @@ export class User extends BaseEntity {
 
     @Column({ default: false })
     isAdmin: boolean;
+
+    @Column({ default: false })
+    isSuperuser: boolean;
 
     @ManyToMany(type => Group)
     @JoinTable()
@@ -53,8 +56,8 @@ export class User extends BaseEntity {
     }
 
     hasPermission(codename: string) {
-        // Active admin users have all permissions
-        if (this.isActive && this.isAdmin) {
+        // Active superusers users have all permissions
+        if (this.isActive && this.isSuperuser) {
             return true;
         }
 
@@ -78,10 +81,24 @@ export class User extends BaseEntity {
     }
 
     refusePermission(codename: string) {
-        this.permissions.filter(permission => permission.codename !== codename);
+        this.permissions = this.permissions.filter(permission => permission.codename !== codename);
+    }
+
+    setGroup(group: Group) {
+        if (!this.findGroup(group)) {
+            this.groups.push(group);
+        }
+    }
+
+    unsetGroup(group: Group) {
+        this.groups = this.groups.filter(currentGroup => currentGroup.id !== group.id);
     }
 
     private findPermission(codename: string, permissions: Permission[]) {
         return permissions.find(permission => permission.codename === codename);
+    }
+
+    private findGroup(group: Group) {
+        return this.groups.find(currentGroup => currentGroup.id === group.id);
     }
 }

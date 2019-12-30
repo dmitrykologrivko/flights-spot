@@ -23,6 +23,6 @@ export class Group extends BaseEntity {
     }
 
     popPermission(codename: string) {
-        this.permissions.filter(userPermission => userPermission.codename !== codename);
+        this.permissions = this.permissions.filter(permission => permission.codename !== codename);
     }
 }
