@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { PropertyConfigService } from '@common/config';
-import { SERVER_PORT_PROPERTY } from '@common/constants';
+import { PropertyConfigService } from '@core/config';
+import { SERVER_PORT_PROPERTY } from '@core/constants';
 import { AppModule } from './app.module';
 
 async function bootstrap() {

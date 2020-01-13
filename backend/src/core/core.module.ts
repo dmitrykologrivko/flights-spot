@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PropertyConfigModule } from './config';
 import { DatabaseModule } from './database';
-import commonConfig from './common.config';
+import commonConfig from './core.config';
 
 @Module({
     imports: [
@@ -12,4 +12,4 @@ import commonConfig from './common.config';
     ],
     exports: [PropertyConfigModule],
 })
-export class CommonModule {}
+export class CoreModule {}

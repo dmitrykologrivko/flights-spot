@@ -1,6 +1,6 @@
 import {Column, Entity, JoinTable, ManyToMany} from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { BaseEntity } from '@common/entities';
+import { BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 import { Group } from './group.entity';
 
