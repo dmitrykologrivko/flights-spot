@@ -1,4 +1,4 @@
-import { bootstrap } from '@core/server';
+import { bootstrapApplication } from '@core/utils';
 import { AppModule } from './app.module';
 
-bootstrap(AppModule);
+bootstrapApplication(AppModule);

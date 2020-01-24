@@ -1,14 +1,14 @@
 import { NestFactory } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
 import { ManagementService } from './management.service';
 
-export async function bootstrap(appModule: any) {
+export async function bootstrapManagement(appModule: any) {
     const app = await NestFactory.createApplicationContext(appModule);
 
     try {
         await app.get(ManagementService).exec();
     } catch (e) {
-        // TODO: Replace with logger
-        console.log(e);
+        Logger.error(e.message as Error);
         process.exit(1);
     }
 
