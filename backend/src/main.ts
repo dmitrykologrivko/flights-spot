@@ -1,4 +1,5 @@
-import { bootstrapApplication } from '@core/utils';
+import { bootstrapApplication } from '@core/bootstrap';
 import { AppModule } from './app.module';
 
-bootstrapApplication(AppModule);
+bootstrapApplication({ module: AppModule })
+    .then(bootstrapper => bootstrapper.start());
