@@ -8,7 +8,7 @@ export async function bootstrapManagement(appModule: any) {
     try {
         await app.get(ManagementService).exec();
     } catch (e) {
-        Logger.error(e.message as Error);
+        Logger.error(e.message, e.stack);
         process.exit(1);
     }
 

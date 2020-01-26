@@ -6,7 +6,6 @@ import { AuthModule } from '@auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import appConfig from './app.config';
-import { MetadataScanner } from '@nestjs/core/metadata-scanner';
 
 const configOptions = {
   isGlobal: true,
@@ -22,6 +21,6 @@ const configOptions = {
       AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService, MetadataScanner],
+  providers: [AppService],
 })
 export class AppModule {}
