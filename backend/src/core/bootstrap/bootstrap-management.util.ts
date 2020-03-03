@@ -1,10 +1,14 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 import { Bootstrapper, BootstrapOptions } from './bootstrap.interfaces';
 import { ManagementService } from '../management';
 
 export async function bootstrapManagement(options: BootstrapOptions): Promise<Bootstrapper> {
     const app = await NestFactory.createApplicationContext(options.module);
+
+    // Set dependency injection container for class validator
+    useContainer(app.select(options.module), { fallbackOnErrors: true });
 
     const start = async () => {
         try {

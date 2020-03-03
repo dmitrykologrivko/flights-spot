@@ -1,5 +1,5 @@
-import { Column, Entity } from 'typeorm';
-import { BaseEntity } from '@core/entities';
+import { Column } from 'typeorm';
+import { Entity, BaseEntity } from '@core/entities';
 
 @Entity()
 export class Permission extends BaseEntity {

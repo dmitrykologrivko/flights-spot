@@ -1,5 +1,5 @@
-import { Column, Entity, ManyToMany, JoinTable } from 'typeorm';
-import { BaseEntity } from '@core/entities';
+import { Column, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 
 @Entity()
@@ -32,10 +32,10 @@ export class Group extends BaseEntity {
     }
 
     /**
-     * Unset permission for group
+     * Removes permission for group
      * @param codename {string} Permission codename
      */
-    unsetPermission(codename: string) {
+    removePermission(codename: string) {
         this.permissions = this.permissions.filter(permission => permission.codename !== codename);
     }
 }
