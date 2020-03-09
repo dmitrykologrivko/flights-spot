@@ -29,6 +29,12 @@ export class Permission extends BaseEntity {
         this._codename = codename;
     }
 
+    /**
+     * Creates new permission instance
+     * @param name permission name
+     * @param codename permission codename
+     * @return permission creation result
+     */
     static create(
         name: string,
         codename: string,

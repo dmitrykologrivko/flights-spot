@@ -25,6 +25,11 @@ export class Group extends BaseEntity {
         this._name = name;
     }
 
+    /**
+     * Creates new permission instance
+     * @param name permission name
+     * @return group creation result
+     */
     static create(name: string): Result<Group, ValidationException[]> {
         const validateResult = Validate.withResults([
             Group.validateName(name),
@@ -43,8 +48,8 @@ export class Group extends BaseEntity {
 
     /**
      * Checks if group has permission
-     * @param codename {string} Permission codename
-     * @returns {boolean}
+     * @param codename Permission codename
+     * @return true if group has permission else false
      */
     hasPermission(codename: string) {
         return !!this._permissions.find(permission => permission.codename === codename);
@@ -52,7 +57,7 @@ export class Group extends BaseEntity {
 
     /**
      * Sets permission to group
-     * @param permission {Permission}
+     * @param permission permission
      */
     setPermission(permission: Permission) {
         if (!this.hasPermission(permission.codename)) {
@@ -62,7 +67,7 @@ export class Group extends BaseEntity {
 
     /**
      * Removes permission for group
-     * @param codename {string} Permission codename
+     * @param codename permission codename
      */
     removePermission(codename: string) {
         this._permissions = this._permissions.filter(permission => permission.codename !== codename);

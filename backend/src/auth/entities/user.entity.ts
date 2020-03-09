@@ -97,16 +97,16 @@ export class User extends BaseEntity {
 
     /**
      * Creates new user instance
-     * @param username {string}
-     * @param password {string}
-     * @param email {string}
-     * @param firstName {string}
-     * @param lastName {string}
-     * @param isActive {boolean}
-     * @param isAdmin {boolean}
-     * @param isSuperuser {boolean}
-     * @param saltRounds {number}
-     * @returns {Promise}
+     * @param username username
+     * @param password password
+     * @param email email
+     * @param firstName first name
+     * @param lastName last name
+     * @param isActive flag to indicate if user is active
+     * @param isAdmin flag to indicate if user is admin
+     * @param isSuperuser flag to indicate if user is superuser
+     * @param saltRounds salt rounds used for hashing password. default is 10.
+     * @return user creation result
      */
     static async create(
         username: string,
@@ -188,8 +188,8 @@ export class User extends BaseEntity {
 
     /**
      * Changes current username
-     * @param username {string} new username
-     * @returns {Result}
+     * @param username new username
+     * @return changing username result
      */
     changeUsername(username: string): ValidationResult {
         const validateResult = User.validateUsername(username);
@@ -202,7 +202,7 @@ export class User extends BaseEntity {
     /**
      * Changes current email
      * @param email new email
-     * @returns {Result}
+     * @return changing email result
      */
     changeEmail(email: string): ValidationResult {
         const validateResult = User.validateEmail(email);
@@ -216,7 +216,7 @@ export class User extends BaseEntity {
      * Changes current first and last name
      * @param firstName new first name
      * @param lastName new last name
-     * @returns {Result}
+     * @return changing name result
      */
     changeName(firstName: string, lastName: string): SingleValidationResult {
         const validateResult = Validate.withResults([
@@ -290,11 +290,11 @@ export class User extends BaseEntity {
 
     /**
      * Sets password hash from plain password
-     * @param {string} password Plain password
-     * @param saltRounds {number} Salt Rounds
-     * @returns {Promise}
+     * @param password Plain password
+     * @param saltRounds Salt Rounds
+     * @return changing password result
      */
-    async setPassword(password: string, saltRounds: number): Promise<Result<void, ValidationException>> {
+    async setPassword(password: string, saltRounds: number): Promise<ValidationResult> {
         const validateResult = User.validatePassword(password);
 
         if (validateResult.is_err()) {
@@ -306,8 +306,7 @@ export class User extends BaseEntity {
 
     /**
      * Compares plain password with existing user`s password hash
-     * @param password {string} Plain password
-     * @returns {Promise}
+     * @param password Plain password
      */
     async comparePassword(password: string) {
         return await bcrypt.compare(password, this._password);
@@ -316,8 +315,8 @@ export class User extends BaseEntity {
     /**
      * Checks if user or one of user`s group has permission.
      * If user is active superuser always returns true.
-     * @param {string} codename Permission codename
-     * @returns {boolean}
+     * @param codename Permission codename
+     * @return true if user has permission else false
      */
     hasPermission(codename: string) {
         // Active superusers users have all permissions
