@@ -1,13 +1,65 @@
 import { Column } from 'typeorm';
+import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
+import { Validate } from '@core/utils';
+import { ValidationException } from '@core/exceptions';
+
+export const NAME_MAX_LENGTH = 255;
+export const CODENAME_MAX_LENGTH = 100;
 
 @Entity()
 export class Permission extends BaseEntity {
 
-    @Column({ length: 255 })
-    name: string;
+    @Column({
+        name: 'name',
+        length: NAME_MAX_LENGTH,
+    })
+    private readonly _name: string;
 
-    @Column({ length: 100, unique: true })
-    codename: string;
+    @Column({
+        name: 'codename',
+        length: CODENAME_MAX_LENGTH,
+        unique: true,
+    })
+    private readonly _codename: string;
 
+    private constructor(name: string, codename: string) {
+        super();
+        this._name = name;
+        this._codename = codename;
+    }
+
+    static create(
+        name: string,
+        codename: string,
+    ): Result<Permission, ValidationException[]> {
+        const validateResult = Validate.withResults([
+            Permission.validateName(name),
+            Permission.validateCodename(codename),
+        ]);
+
+        return validateResult.map(() => new Permission(name, codename));
+    }
+
+    get name(): string {
+        return this._name;
+    }
+
+    get codename(): string {
+        return this._codename;
+    }
+
+    private static validateName(name: string): Result<void, ValidationException> {
+        return Validate.withProperty('name', name)
+            .isNotEmpty()
+            .maxLength(NAME_MAX_LENGTH)
+            .isValid();
+    }
+
+    private static validateCodename(codename: string): Result<void, ValidationException> {
+        return Validate.withProperty('codename', codename)
+            .isNotEmpty()
+            .maxLength(CODENAME_MAX_LENGTH)
+            .isValid();
+    }
 }

@@ -336,7 +336,7 @@ export class User extends BaseEntity {
         }
 
         for (const group of this._groups) {
-            if (this.findPermission(codename, group.permissions)) {
+            if (group.hasPermission(codename)) {
                 return true;
             }
         }
