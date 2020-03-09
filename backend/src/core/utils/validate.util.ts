@@ -1,4 +1,4 @@
-import { Result, Err } from '@usefultools/monads';
+import { Result, Ok, Err } from '@usefultools/monads';
 import { Validator } from 'class-validator';
 import { ValidationException } from '../exceptions';
 
@@ -47,8 +47,10 @@ export class Validate {
         const errorResults = results.filter(result => result.is_err());
 
         if (errorResults.length > 0) {
-            return Err(results.map(result => result.unwrap_err()));
+            return Err(errorResults.map(result => result.unwrap_err()));
         }
+
+        return Ok(null);
     }
 
     /**
@@ -102,9 +104,10 @@ export class Validate {
      * @return validation result
      */
     isValid(): ValidationResult {
-        if (!this.exception) {
+        if (this.exception) {
             return Err(this.exception);
         }
+        return Ok(null);
     }
 
     private rejectValidation(constraint: string, message: string) {

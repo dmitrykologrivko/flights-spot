@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { Column, JoinTable, ManyToMany } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
-import { Validate, ValidationResult } from '@core/utils';
+import { Validate, ValidationResult, SingleValidationResult } from '@core/utils';
 import { ValidationException } from '@core/exceptions';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
@@ -69,20 +69,20 @@ export class User extends BaseEntity {
 
     @ManyToMany(type => Group)
     @JoinTable()
-    private _groups: Group[];
+    private _groups: Group[] = [];
 
     @ManyToMany(type => Permission)
     @JoinTable()
-    private _permissions: Permission[];
+    private _permissions: Permission[] = [];
 
     private constructor(
         username: string,
         email: string,
         firstName: string,
         lastName: string,
-        isActive?: boolean,
-        isAdmin?: boolean,
-        isSuperuser?: boolean,
+        isActive: boolean = false,
+        isAdmin: boolean = false,
+        isSuperuser: boolean = false,
     ) {
         super();
 
@@ -114,9 +114,9 @@ export class User extends BaseEntity {
         email: string,
         firstName: string,
         lastName: string,
-        isActive?: boolean,
-        isAdmin?: boolean,
-        isSuperuser?: boolean,
+        isActive: boolean = false,
+        isAdmin: boolean = false,
+        isSuperuser: boolean = false,
         saltRounds: number = 10,
     ): Promise<Result<User, ValidationException[]>> {
         const validateResult = Validate.withResults([
@@ -191,14 +191,12 @@ export class User extends BaseEntity {
      * @param username {string} new username
      * @returns {Result}
      */
-    changeUsername(username: string): Result<void, ValidationException> {
+    changeUsername(username: string): ValidationResult {
         const validateResult = User.validateUsername(username);
 
-        if (validateResult.is_err()) {
-            return validateResult;
-        }
-
-        this._username = username;
+        return validateResult.map(() => {
+            this._username = username;
+        });
     }
 
     /**
@@ -206,14 +204,12 @@ export class User extends BaseEntity {
      * @param email new email
      * @returns {Result}
      */
-    changeEmail(email: string): Result<void, ValidationException> {
+    changeEmail(email: string): ValidationResult {
         const validateResult = User.validateEmail(email);
 
-        if (validateResult.is_err()) {
-            return validateResult;
-        }
-
-        this._email = email;
+        return validateResult.map(() => {
+            this._email = email;
+        });
     }
 
     /**
@@ -222,18 +218,16 @@ export class User extends BaseEntity {
      * @param lastName new last name
      * @returns {Result}
      */
-    changeName(firstName: string, lastName: string): Result<void, ValidationException[]> {
+    changeName(firstName: string, lastName: string): SingleValidationResult {
         const validateResult = Validate.withResults([
             User.validateFirstName(firstName),
             User.validateLastName(lastName),
         ]);
 
-        if (validateResult.is_err()) {
-            return validateResult;
-        }
-
-        this._firstName = firstName;
-        this._lastName = lastName;
+        return validateResult.map(() => {
+            this._firstName = firstName;
+            this._lastName = lastName;
+        });
     }
 
     /**
@@ -265,16 +259,16 @@ export class User extends BaseEntity {
     }
 
     /**
-     * Sets current user as a super user
+     * Sets current user as a superuser
      */
     setSuperuserAccess() {
         this._isSuperuser = true;
     }
 
     /**
-     * Sets current user as not admin user
+     * Sets current user as not superuser
      */
-    denySuperUserAccess() {
+    denySuperuserAccess() {
         this._isSuperuser = false;
     }
 
@@ -380,14 +374,14 @@ export class User extends BaseEntity {
         this._groups = this._groups.filter(currentGroup => currentGroup.id !== group.id);
     }
 
-    private static validateUsername(username: string): ValidationResult {
+    private static validateUsername(username: string) {
         return Validate.withProperty('username', username)
             .isNotEmpty()
             .maxLength(USERNAME_MAX_LENGTH)
             .isValid();
     }
 
-    private static validatePassword(password: string): ValidationResult {
+    private static validatePassword(password: string) {
         return Validate.withProperty('password', password)
             .isNotEmpty()
             .minLength(PASSWORD_MIN_LENGTH)
@@ -395,21 +389,21 @@ export class User extends BaseEntity {
             .isValid();
     }
 
-    private static validateEmail(email: string): ValidationResult {
+    private static validateEmail(email: string) {
         return Validate.withProperty('email', email)
             .isEmail()
             .maxLength(EMAIL_MAX_LENGTH)
             .isValid();
     }
 
-    private static validateFirstName(firstName: string): ValidationResult {
+    private static validateFirstName(firstName: string) {
         return Validate.withProperty('firstName', firstName)
             .isNotEmpty()
             .maxLength(FIRST_NAME_MAX_LENGTH)
             .isValid();
     }
 
-    private static validateLastName(lastName: string): ValidationResult {
+    private static validateLastName(lastName: string) {
         return Validate.withProperty('lastName', lastName)
             .isNotEmpty()
             .maxLength(LAST_NAME_MAX_LENGTH)

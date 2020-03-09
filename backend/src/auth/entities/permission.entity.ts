@@ -1,10 +1,10 @@
 import { Column } from 'typeorm';
 import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
-import { Validate } from '@core/utils';
+import { Validate, ValidationResult } from '@core/utils';
 import { ValidationException } from '@core/exceptions';
 
-export const NAME_MAX_LENGTH = 255;
+export const PERMISSION_NAME_MAX_LENGTH = 255;
 export const CODENAME_MAX_LENGTH = 100;
 
 @Entity()
@@ -12,7 +12,7 @@ export class Permission extends BaseEntity {
 
     @Column({
         name: 'name',
-        length: NAME_MAX_LENGTH,
+        length: PERMISSION_NAME_MAX_LENGTH,
     })
     private readonly _name: string;
 
@@ -49,14 +49,14 @@ export class Permission extends BaseEntity {
         return this._codename;
     }
 
-    private static validateName(name: string): Result<void, ValidationException> {
+    private static validateName(name: string) {
         return Validate.withProperty('name', name)
             .isNotEmpty()
-            .maxLength(NAME_MAX_LENGTH)
+            .maxLength(PERMISSION_NAME_MAX_LENGTH)
             .isValid();
     }
 
-    private static validateCodename(codename: string): Result<void, ValidationException> {
+    private static validateCodename(codename: string) {
         return Validate.withProperty('codename', codename)
             .isNotEmpty()
             .maxLength(CODENAME_MAX_LENGTH)

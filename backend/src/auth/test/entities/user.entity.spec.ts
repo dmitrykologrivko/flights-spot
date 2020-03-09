@@ -10,9 +10,11 @@ import {
 
 describe('UserEntity', () => {
     const SALT_ROUNDS = 10;
+    const USERNAME = 'happy_user';
     const PASSWORD = 'sfs3opjk*fgsg';
-
-    let hashedPassword: string;
+    const EMAIL = 'happy.user@email.com';
+    const FIRST_NAME = 'John';
+    const LAST_NAME = 'Smith';
 
     let user: User;
     let group: Group;
@@ -20,36 +22,147 @@ describe('UserEntity', () => {
     let writePermission: Permission;
     let deletePermission: Permission;
 
-    beforeAll(async () => {
-        hashedPassword = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
+    beforeEach (async () => {
+        readPermission = Permission.create(
+            'Read Permission',
+            'read',
+        ).unwrap();
+
+        writePermission = Permission.create(
+            'Write Permission',
+            'write',
+        ).unwrap();
+
+        deletePermission = Permission.create(
+            'Delete Permission',
+            'delete',
+        ).unwrap();
+
+        group = Group.create('Managers Group').unwrap();
+        group.id = 1;
+        group.setPermission(readPermission);
+
+        const createUserResult = await User.create(
+            USERNAME,
+            PASSWORD,
+            EMAIL,
+            FIRST_NAME,
+            LAST_NAME,
+        );
+        user = createUserResult.unwrap();
+        user.addToGroup(group);
+        user.addUserPermission(writePermission);
     });
 
-    beforeEach (() => {
-        readPermission = new Permission();
-        readPermission.name = 'Read Permission';
-        readPermission.codename = 'read';
+    describe('#changeUsername()', () => {
+        it('should change current username', () => {
+            const newUsername = 'bad_user';
 
-        writePermission = new Permission();
-        writePermission.name = 'Write Permission';
-        writePermission.codename = 'write';
+            expect(user.username).toBe(USERNAME);
 
-        deletePermission = new Permission();
-        deletePermission.name = 'Delete Permission';
-        deletePermission.codename = 'delete';
+            user.changeUsername(newUsername);
 
-        group = new Group();
-        group.id = 1;
-        group.name = 'Managers Group';
-        group.permissions = [readPermission];
+            expect(user.username).toBe(newUsername);
+        });
+    });
 
-        user = new User();
-        user.username = 'happy_user';
-        user.password = hashedPassword;
-        user.firstName = 'John';
-        user.lastName = 'Smith';
-        user.email = 'happy.user@email.com';
-        user.groups = [group];
-        user.permissions = [writePermission];
+    describe('#changeEmail()', () => {
+        it('should change current email', () => {
+            const newEmail = 'new@email.com';
+
+            expect(user.email).toBe(EMAIL);
+
+            user.changeEmail(newEmail);
+
+            expect(user.email).toBe(newEmail);
+        });
+    });
+
+    describe('#changeName()', () => {
+        it('should change current first and last name', () => {
+            const newFirstName = 'Hanna';
+            const newLastName = 'Parker';
+
+            expect(user.firstName).toBe(FIRST_NAME);
+            expect(user.lastName).toBe(LAST_NAME);
+
+            user.changeName(newFirstName, newLastName);
+
+            expect(user.firstName).toBe(newFirstName);
+            expect(user.lastName).toBe(newLastName);
+        });
+    });
+
+    describe('#activateUser()', () => {
+        it('should activate user', () => {
+            user.deactivateUser();
+
+            expect(user.isActive).toBe(false);
+
+            user.activateUser();
+
+            expect(user.isActive).toBe(true);
+        });
+    });
+
+    describe('#deactivateUser()', () => {
+        it('should deactivate user', () => {
+            user.activateUser();
+
+            expect(user.isActive).toBe(true);
+
+            user.deactivateUser();
+
+            expect(user.isActive).toBe(false);
+        });
+    });
+
+    describe('#setAdminAccess()', () => {
+        it('should set admin access to user', () => {
+            user.denyAdminAccess();
+
+            expect(user.isAdmin).toBe(false);
+
+            user.setAdminAccess();
+
+            expect(user.isAdmin).toBe(true);
+        });
+    });
+
+    describe('#denyAdminAccess()', () => {
+        it('should deny admin access to user', () => {
+            user.setAdminAccess();
+
+            expect(user.isAdmin).toBe(true);
+
+            user.denyAdminAccess();
+
+            expect(user.isAdmin).toBe(false);
+        });
+    });
+
+    describe('#setSuperuserAccess()', () => {
+        it('should set superuser access to user', () => {
+            user.denySuperuserAccess();
+
+            expect(user.isSuperuser).toBe(false);
+
+            user.setSuperuserAccess();
+
+            expect(user.isSuperuser).toBe(true);
+        });
+    });
+
+    describe('#denySuperuserAccess()', () => {
+        it('should deny superuser access to user', () => {
+            user.setSuperuserAccess();
+
+            expect(user.isSuperuser).toBe(true);
+
+            user.denySuperuserAccess();
+
+            expect(user.isSuperuser).toBe(false);
+        });
     });
 
     describe('#getFullName()', () => {
@@ -66,8 +179,6 @@ describe('UserEntity', () => {
 
     describe('#setPassword()', () => {
         it('should set hashed password', async () => {
-            user.password = null;
-
             await user.setPassword(PASSWORD, SALT_ROUNDS);
             const isMatch = await bcrypt.compare(PASSWORD, user.password);
 
@@ -89,8 +200,8 @@ describe('UserEntity', () => {
 
     describe('#hasPermission()', () => {
         it('when active superuser has no permission should return true', () => {
-            user.isActive = true;
-            user.isSuperuser = true;
+            user.activateUser();
+            user.setSuperuserAccess();
 
             // Make sure that user and group have no permission
             expectHasNoPermission(deletePermission, user);
@@ -126,11 +237,11 @@ describe('UserEntity', () => {
         });
     });
 
-    describe('#assignPermission()', () => {
-        it('should assign new permission', () => {
+    describe('#addUserPermission()', () => {
+        it('should add new user permission', () => {
             expectInitialPermissions();
 
-            user.assignPermission(deletePermission);
+            user.addUserPermission(deletePermission);
 
             expectPermissionsCount(2, user);
             expectPermissionsCount(1, group);
@@ -138,20 +249,20 @@ describe('UserEntity', () => {
             expectHasNoPermission(deletePermission, group);
         });
 
-        it('when permission already assigned should not duplicate', () => {
+        it('when permission already added should not duplicate', () => {
             expectInitialPermissions();
 
-            user.assignPermission(writePermission);
+            user.addUserPermission(writePermission);
 
             expectInitialPermissions();
         });
     });
 
-    describe('#refusePermission()', () => {
-        it('should refuse permission', () => {
+    describe('#removeUserPermission()', () => {
+        it('should remove user permission', () => {
             expectInitialPermissions();
 
-            user.refusePermission(writePermission.codename);
+            user.removeUserPermission(writePermission.codename);
 
             expectPermissionsCount(0, user);
             expectPermissionsCount(1, group);
@@ -159,55 +270,53 @@ describe('UserEntity', () => {
             expectHasPermission(readPermission, group);
         });
 
-        it('when permission is not assigned should not modify existing permissions', () => {
+        it('when permission is not added should not modify existing permissions', () => {
             expectInitialPermissions();
 
-            user.refusePermission('delete');
+            user.removeUserPermission('delete');
 
             expectInitialPermissions();
         });
     });
 
-    describe('#setGroup()', () => {
-        it('should set new group', () => {
+    describe('#addToGroup()', () => {
+        it('should add user to new group', () => {
             expectInitialGroups();
 
-            const newGroup = new Group();
+            const newGroup = Group.create('Sales Group').unwrap();
             newGroup.id = 2;
-            newGroup.name = 'Sales Group';
 
-            user.setGroup(newGroup);
+            user.addToGroup(newGroup);
 
             expectGroupsCount(2, user);
             expectHasGroup(newGroup, user);
         });
 
-        it('when group already set should not duplicate', () => {
+        it('when user already in group should not duplicate', () => {
             expectInitialGroups();
 
-            user.setGroup(group);
+            user.addToGroup(group);
 
             expectInitialGroups();
         });
     });
 
-    describe('#unsetGroup()', () => {
-        it('should unset group', () => {
+    describe('#removeFromGroup()', () => {
+        it('should remove user from group', () => {
             expectInitialGroups();
 
-            user.unsetGroup(group);
+            user.removeFromGroup(group);
 
             expectGroupsCount(0, user);
         });
 
-        it('when group is not set should not modify existing groups', () => {
+        it('when user is not in group should not modify existing groups', () => {
             expectInitialGroups();
 
-            const newGroup = new Group();
+            const newGroup = Group.create('Sales Group').unwrap();
             newGroup.id = 2;
-            newGroup.name = 'Sales Group';
 
-            user.unsetGroup(newGroup);
+            user.removeFromGroup(newGroup);
 
             expectInitialGroups();
         });

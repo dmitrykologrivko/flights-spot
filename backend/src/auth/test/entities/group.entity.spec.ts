@@ -11,17 +11,19 @@ describe('GroupEntity', () => {
     let writePermission: Permission;
 
     beforeEach(() => {
-        readPermission = new Permission();
-        readPermission.name = 'Read Permission';
-        readPermission.codename = 'read';
+        readPermission = Permission.create(
+            'Read Permission',
+            'read',
+        ).unwrap();
 
-        writePermission = new Permission();
-        writePermission.name = 'Write Permission';
-        writePermission.codename = 'write';
+        writePermission = Permission.create(
+            'Write Permission',
+            'write',
+        ).unwrap();
 
-        group = new Group();
-        group.name = 'Managers Group';
-        group.permissions = [readPermission, writePermission];
+        group = Group.create('Managers Group').unwrap();
+        group.setPermission(readPermission);
+        group.setPermission(writePermission);
     });
 
     describe('#hasPermission()', () => {
@@ -36,9 +38,10 @@ describe('GroupEntity', () => {
 
     describe('#setPermission()', () => {
         it('should set new permission', () => {
-            const deletePermission = new Permission();
-            deletePermission.name = 'Delete Permission';
-            deletePermission.codename = 'delete';
+            const deletePermission = Permission.create(
+                'Delete Permission',
+                'delete',
+            ).unwrap();
 
             expectInitialPermissions();
 
@@ -57,11 +60,11 @@ describe('GroupEntity', () => {
         });
     });
 
-    describe('#unsetPermission()', () => {
+    describe('#removePermission()', () => {
         it('should pop permission', () => {
             expectInitialPermissions();
 
-            group.unsetPermission(writePermission.codename);
+            group.removePermission(writePermission.codename);
 
             expectPermissionsCount(1, group);
             expectHasPermission(readPermission, group);
@@ -71,7 +74,7 @@ describe('GroupEntity', () => {
         it('when permission is not set should not modify existing permissions', () => {
             expectInitialPermissions();
 
-            group.unsetPermission('write_users');
+            group.removePermission('write_users');
 
             expectInitialPermissions();
         });

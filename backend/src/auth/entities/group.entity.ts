@@ -5,20 +5,20 @@ import { Permission } from './permission.entity';
 import { Validate } from '@core/utils';
 import { ValidationException } from '@core/exceptions';
 
-export const NAME_MAX_LENGTH = 150;
+export const GROUP_NAME_MAX_LENGTH = 150;
 
 @Entity()
 export class Group extends BaseEntity {
 
     @Column({
         name: 'name',
-        length: NAME_MAX_LENGTH,
+        length: GROUP_NAME_MAX_LENGTH,
     })
     private readonly _name: string;
 
     @ManyToMany(type => Permission)
     @JoinTable()
-    private _permissions: Permission[];
+    private _permissions: Permission[] = [];
 
     private constructor(name: string) {
         super();
@@ -71,7 +71,7 @@ export class Group extends BaseEntity {
     private static validateName(name: string) {
         return Validate.withProperty('name', name)
             .isNotEmpty()
-            .maxLength(NAME_MAX_LENGTH)
+            .maxLength(GROUP_NAME_MAX_LENGTH)
             .isValid();
     }
 }
