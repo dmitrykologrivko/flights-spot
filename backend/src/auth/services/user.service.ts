@@ -68,7 +68,7 @@ export class UserService {
         });
 
         if (!user) {
-            return Err(EntityNotFoundException);
+            return Err(new EntityNotFoundException());
         }
 
         const output = ClassTransformer.toClassObject(FindUserOutput, user);
