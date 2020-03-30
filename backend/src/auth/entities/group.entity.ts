@@ -18,7 +18,7 @@ export class Group extends BaseEntity {
 
     @ManyToMany(type => Permission)
     @JoinTable()
-    private _permissions: Permission[] = [];
+    private _permissions: Permission[];
 
     private constructor(name: string) {
         super();
@@ -52,7 +52,7 @@ export class Group extends BaseEntity {
      * @return true if group has permission else false
      */
     hasPermission(codename: string) {
-        return !!this._permissions.find(permission => permission.codename === codename);
+        return this._permissions && !!this._permissions.find(permission => permission.codename === codename);
     }
 
     /**
@@ -61,6 +61,10 @@ export class Group extends BaseEntity {
      */
     setPermission(permission: Permission) {
         if (!this.hasPermission(permission.codename)) {
+            if (!this._permissions) {
+                this._permissions = [];
+            }
+
             this._permissions.push(permission);
         }
     }
@@ -70,6 +74,10 @@ export class Group extends BaseEntity {
      * @param codename permission codename
      */
     removePermission(codename: string) {
+        if (!this._permissions) {
+            return;
+        }
+
         this._permissions = this._permissions.filter(permission => permission.codename !== codename);
     }
 

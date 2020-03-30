@@ -69,11 +69,11 @@ export class User extends BaseEntity {
 
     @ManyToMany(type => Group)
     @JoinTable()
-    private _groups: Group[] = [];
+    private _groups: Group[];
 
     @ManyToMany(type => Permission)
     @JoinTable()
-    private _permissions: Permission[] = [];
+    private _permissions: Permission[];
 
     private constructor(
         username: string,
@@ -324,13 +324,15 @@ export class User extends BaseEntity {
             return true;
         }
 
-        if (this.findPermission(codename, this._permissions)) {
+        if (this.findUserPermission(codename)) {
             return true;
         }
 
-        for (const group of this._groups) {
-            if (group.hasPermission(codename)) {
-                return true;
+        if (this._groups) {
+            for (const group of this._groups) {
+                if (group.hasPermission(codename)) {
+                    return true;
+                }
             }
         }
 
@@ -342,7 +344,11 @@ export class User extends BaseEntity {
      * @param permission {Permission}
      */
     addUserPermission(permission: Permission) {
-        if (!this.findPermission(permission.codename, this._permissions)) {
+        if (!this.findUserPermission(permission.codename)) {
+            if (!this._permissions) {
+                this._permissions = [];
+            }
+
             this._permissions.push(permission);
         }
     }
@@ -352,6 +358,10 @@ export class User extends BaseEntity {
      * @param codename {string} Permission codename
      */
     removeUserPermission(codename: string) {
+        if (!this._permissions) {
+            return;
+        }
+
         this._permissions = this._permissions.filter(permission => permission.codename !== codename);
     }
 
@@ -361,6 +371,10 @@ export class User extends BaseEntity {
      */
     addToGroup(group: Group) {
         if (!this.findGroup(group)) {
+            if (!this._groups) {
+                this._groups = [];
+            }
+
             this._groups.push(group);
         }
     }
@@ -370,6 +384,10 @@ export class User extends BaseEntity {
      * @param group {Group}
      */
     removeFromGroup(group: Group) {
+        if (!this._groups) {
+            return;
+        }
+
         this._groups = this._groups.filter(currentGroup => currentGroup.id !== group.id);
     }
 
@@ -409,11 +427,19 @@ export class User extends BaseEntity {
             .isValid();
     }
 
-    private findPermission(codename: string, permissions: Permission[]) {
-        return permissions.find(permission => permission.codename === codename);
+    private findUserPermission(codename: string) {
+        if (!this._permissions) {
+            return null;
+        }
+
+        return this._permissions.find(permission => permission.codename === codename);
     }
 
     private findGroup(group: Group) {
+        if (!this._groups) {
+            return null;
+        }
+
         return this._groups.find(currentGroup => currentGroup.id === group.id);
     }
 }
