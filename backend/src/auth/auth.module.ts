@@ -19,13 +19,13 @@ import authConfig from './auth.config';
     imports: [
         ConfigModule.forFeature(authConfig),
         TypeOrmModule.forFeature([User, Group, Permission]),
-        //PassportModule,
+        PassportModule,
     ],
     providers: [
-        //AuthService,
-        //LocalStrategy,
         UserService,
         UserRegistrationService,
+        AuthService,
+        LocalStrategy,
         EmailUniqueConstraint,
         UsernameUniqueConstraint,
         UsersCommand,

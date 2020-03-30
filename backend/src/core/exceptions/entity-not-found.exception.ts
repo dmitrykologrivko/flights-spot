@@ -1,5 +1,5 @@
 /**
  * Entity not found exception
- * Indicates that the requested domain entity is not found
+ * Indicates that requested domain entity is not found
  */
 export class EntityNotFoundException {}

@@ -193,7 +193,7 @@ describe('UserService', () => {
             const findUserResult = await service.findUser(findUserInput);
 
             expect(findUserResult.is_err()).toBe(true);
-            expect(findUserResult.unwrap_err() instanceof EntityNotFoundException).toBe(true);
+            expect(findUserResult.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
         });
 
         it('when user exists should return successful output', async () => {
