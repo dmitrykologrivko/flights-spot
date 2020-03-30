@@ -75,8 +75,6 @@ export class ClassTransformer {
         return classToClass(object, options);
     }
 
-    ///
-
     /**
      * Map plain (literal) object to class (constructor) object
      * @param cls class construction function
