@@ -10,6 +10,8 @@ import { UserService } from './services/user.service';
 import { UserRegistrationService } from './services/user-registration.service';
 import { AuthController } from './controllers/auth.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { IsAuthenticatedGuard } from './guards/is-authenticated.guard';
+import { IsAdminGuard } from './guards/is-admin.guard';
 import { LocalStrategy } from './strategies/local.strategy';
 import { EmailUniqueConstraint } from './validation/email-unique.constraint';
 import { UsernameUniqueConstraint } from './validation/username-unique.constraint';
@@ -27,12 +29,19 @@ import authConfig from './auth.config';
         UserRegistrationService,
         AuthService,
         LocalAuthGuard,
+        IsAuthenticatedGuard,
+        IsAdminGuard,
         LocalStrategy,
         EmailUniqueConstraint,
         UsernameUniqueConstraint,
         UsersCommand,
     ],
     controllers: [AuthController],
-    exports: [TypeOrmModule],
+    exports: [
+        TypeOrmModule,
+        LocalAuthGuard,
+        IsAuthenticatedGuard,
+        IsAdminGuard,
+    ],
 })
 export class AuthModule {}
