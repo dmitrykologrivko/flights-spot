@@ -11,10 +11,10 @@ export class UserRegistrationService {
     ) {}
 
     async isEmailUnique(email: string): Promise<boolean> {
-        return await this.userRepository.count({ where: { email } }) === 0;
+        return await this.userRepository.count({ where: { _email: email } }) === 0;
     }
 
     async isUsernameUnique(username: string): Promise<boolean> {
-        return await this.userRepository.count({ where: { username } }) === 0;
+        return await this.userRepository.count({ where: { _username: username } }) === 0;
     }
 }
