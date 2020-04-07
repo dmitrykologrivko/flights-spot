@@ -4,13 +4,13 @@ import { User } from '../../entities/user.entity';
 import { UserRegistrationService } from '../../services/user-registration.service';
 
 describe('UserRegistrationService', () => {
-    let service: UserRegistrationService;
-    let userRepository: MockProxy<Repository<User>>;
-
     const EMAIL = 'test@test.com';
     const USERNAME = 'john_smith';
-    const EMAIL_QUERY = { where: { email: EMAIL } };
-    const USERNAME_QUERY = { where: { username: USERNAME } };
+    const EMAIL_QUERY = { where: { _email: EMAIL } };
+    const USERNAME_QUERY = { where: { _username: USERNAME } };
+
+    let service: UserRegistrationService;
+    let userRepository: MockProxy<Repository<User>>;
 
     beforeEach(() => {
         userRepository = mock<Repository<User>>();
