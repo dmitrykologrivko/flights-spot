@@ -4,7 +4,6 @@ import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
 import { ClassTransformer } from '@core/utils';
 import { EntityNotFoundException } from '@core/exceptions';
-import { AUTH_JWT_SECRET_PROPERTY } from '../../constants';
 import { JwtStrategy } from '../../strategies/jwt.strategy';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { User } from '../../entities/user.entity';
