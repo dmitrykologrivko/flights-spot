@@ -1,3 +1,5 @@
 export class ValidatePayloadInput {
-    payload: any;
+    payload: {
+        username: string,
+    };
 }

@@ -12,9 +12,10 @@ import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
 import { Permission } from './entities/permission.entity';
 import { AuthService } from './services/auth.service';
+import { JwtAuthService } from './services/jwt-auth.service';
 import { UserService } from './services/user.service';
 import { UserRegistrationService } from './services/user-registration.service';
-import { AuthController } from './controllers/auth.controller';
+import { JwtAuthController } from './controllers/jwt-auth.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { IsAuthenticatedGuard } from './guards/is-authenticated.guard';
@@ -58,6 +59,7 @@ const jwtAsyncOptions = {
         UserService,
         UserRegistrationService,
         AuthService,
+        JwtAuthService,
         LocalAuthGuard,
         JwtAuthGuard,
         IsAuthenticatedGuard,
@@ -68,7 +70,7 @@ const jwtAsyncOptions = {
         UsernameUniqueConstraint,
         UsersCommand,
     ],
-    controllers: [AuthController],
+    controllers: [JwtAuthController],
     exports: [
         TypeOrmModule,
         LocalAuthGuard,

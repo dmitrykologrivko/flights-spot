@@ -1,4 +1,5 @@
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ClassTransformer } from '@core/utils';
 import { EntityNotFoundException } from '@core/exceptions';
@@ -16,12 +17,13 @@ describe('AuthService', () => {
     let userRepository: MockProxy<Repository<User>>;
 
     let user: User;
+
     let validateCredentialsInput: ValidateCredentialsInput;
     let validateCredentialsOutput: ValidateCredentialsOutput;
 
     beforeEach(async () => {
         userRepository = mock<Repository<User>>();
-        service = new AuthService(userRepository, null);
+        service = new AuthService(userRepository);
 
         user = await UserFactory.makeUser();
 
