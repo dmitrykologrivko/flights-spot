@@ -6,8 +6,8 @@ import {
 } from '@nestjs/typeorm';
 import { isEmpty } from '@core/utils/precondition.utils';
 import { PropertyConfigService } from '../config/property-config.service';
-import { DATABASES_PROPERTY } from '../constants/property.constants';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
+import { DATABASES_PROPERTY } from './database-property.constants';
 import { MigrationsCommand } from './migrations.command';
 
 @Module({

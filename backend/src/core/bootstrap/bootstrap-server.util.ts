@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
+import { PropertyConfigService } from '../config/property-config.service';
+import { SERVER_PORT_PROPERTY } from '../server/server.property.constants';
 import { Bootstrapper, BootstrapOptions } from './bootstrap.interfaces';
-import { PropertyConfigService } from '../config';
-import { SERVER_PORT_PROPERTY } from '../constants';
 
 export async function bootstrapServer(options: BootstrapOptions): Promise<Bootstrapper> {
     const app = await NestFactory.create(options.module);
