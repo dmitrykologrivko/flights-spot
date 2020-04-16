@@ -1,7 +1,7 @@
 import { Module, DynamicModule } from '@nestjs/common';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
-import { ConfigModule } from '@nestjs/config';
 import { PropertyConfigModule } from './config';
+import { ServerModule } from './server';
 import { DatabaseModule, DEFAULT_CONNECTION_NAME } from './database';
 import { ManagementModule } from './management';
 import { UtilsModule } from './utils';
@@ -17,8 +17,8 @@ export interface CoreModuleOptions extends Pick<ModuleMetadata, 'imports'> {
 
 @Module({
     imports: [
-        ConfigModule.forFeature(coreConfig),
-        PropertyConfigModule,
+        PropertyConfigModule.forFeature(coreConfig),
+        ServerModule,
         ManagementModule,
         UtilsModule,
     ],

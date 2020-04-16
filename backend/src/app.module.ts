@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from '@core/core.module';
+import { PropertyConfigModule } from '@core/config';
 import { PRODUCTION_ENVIRONMENT, DEVELOPMENT_ENVIRONMENT } from '@core/constants';
 import { AuthModule } from '@auth/auth.module';
 import { AppController } from './app.controller';
@@ -16,7 +16,7 @@ const configOptions = {
 
 @Module({
   imports: [
-      ConfigModule.forRoot(configOptions),
+      PropertyConfigModule.forRoot(configOptions),
       CoreModule.forRoot(),
       AuthModule,
   ],

@@ -4,13 +4,16 @@ import {
     TypeOrmModuleOptions,
     TypeOrmModuleAsyncOptions,
 } from '@nestjs/typeorm';
-import { isEmpty } from '@core/utils/precondition.utils';
+import { isEmpty } from '../utils/precondition.utils';
+import { PropertyConfigModule } from '../config/property-config.module';
 import { PropertyConfigService } from '../config/property-config.service';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
 import { DATABASES_PROPERTY } from './database-property.constants';
 import { MigrationsCommand } from './migrations.command';
+import databaseConfig from './database.config';
 
 @Module({
+    imports: [PropertyConfigModule.forFeature(databaseConfig)],
     providers: [MigrationsCommand],
 })
 export class DatabaseModule {
