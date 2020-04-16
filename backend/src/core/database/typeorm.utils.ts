@@ -26,7 +26,7 @@ export async function createMigration(connection: Connection, migrationName: str
     await execTypeOrmCommand(
         connection,
         TypeOrmCommands.MIGRATION_CREATE,
-        `-n ${migrationName}`,
+        `-n ${migrationName} -c ${connection.name}`,
     );
 }
 
@@ -40,7 +40,7 @@ export async function generateMigration(connection: Connection, migrationName: s
     await execTypeOrmCommand(
         connection,
         TypeOrmCommands.MIGRATION_GENERATE,
-        `-n ${migrationName}`,
+        `-n ${migrationName} -c ${connection.name}`,
     );
 }
 
@@ -55,7 +55,9 @@ export async function runMigrations(connection: Connection) {
 }
 
 /**
- * Executes typeorm cli command with dynamically generated config file.
+ * Executes typeorm cli command.
+ * If ormconfig.json exists then use it, else dynamically generates
+ * config file and removes after command execution.
  * Current database connection herewith will be closed.
  * Use this function only with management scripts.
  * @param connection database connection instance
@@ -70,12 +72,19 @@ export async function execTypeOrmCommand(
     const options = connection.options;
 
     const configPath = `${process.cwd()}/ormconfig.json`;
+    const configExists = fs.existsSync(configPath);
 
-    // Create temp database config file for typeorm cli
-    await writeFile(configPath, JSON.stringify(options));
+    if (!configExists) {
+        // Create temp database config file for typeorm cli
+        await writeFile(configPath, JSON.stringify(options));
 
-    // Safety close current database connection
-    await connection.close();
+        // Safety close current database connection
+        await connection.close();
+    }
+
+    if (configExists) {
+        Logger.warn('Config file "ormconfig.json" already exists. Skipping dynamic generation...');
+    }
 
     // Exec cli command
     const { stdout, stderr } = await exec(`typeorm ${command} ${args}`);
@@ -88,6 +97,8 @@ export async function execTypeOrmCommand(
         Logger.error(stderr);
     }
 
-    // Delete temp database config file
-    await unlink(configPath);
+    if (configExists) {
+        // Delete temp database config file
+        await unlink(configPath);
+    }
 }

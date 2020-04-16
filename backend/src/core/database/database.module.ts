@@ -1,23 +1,58 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { PropertyConfigService } from '../config';
-import { DATABASE_PROPERTY } from '../constants';
+import { Module, DynamicModule } from '@nestjs/common';
+import {
+    TypeOrmModule,
+    TypeOrmModuleOptions,
+    TypeOrmModuleAsyncOptions,
+} from '@nestjs/typeorm';
+import { isEmpty } from '@core/utils/precondition.utils';
+import { PropertyConfigService } from '../config/property-config.service';
+import { DATABASES_PROPERTY } from '../constants/property.constants';
+import { DEFAULT_CONNECTION_NAME } from './database.constants';
 import { MigrationsCommand } from './migrations.command';
 
 @Module({
-    imports: [TypeOrmModule.forRootAsync({
-        imports: [PropertyConfigService],
-        useFactory: (config: PropertyConfigService) => {
-            const options = config.get(DATABASE_PROPERTY);
-
-            if (!options) {
-                throw new Error('Database config is not defined! Please put it in your application config.');
-            }
-
-            return options;
-        },
-        inject: [PropertyConfigService],
-    })],
     providers: [MigrationsCommand],
 })
-export class DatabaseModule {}
+export class DatabaseModule {
+
+    static withOptions(options?: TypeOrmModuleOptions): DynamicModule {
+        return {
+            module: DatabaseModule,
+            imports: [TypeOrmModule.forRoot(options)],
+        };
+    }
+
+    static withOptionsAsync(options: TypeOrmModuleAsyncOptions): DynamicModule {
+        return {
+            module: DatabaseModule,
+            imports: [TypeOrmModule.forRootAsync(options)],
+        };
+    }
+
+    static withConfig(connection: string = DEFAULT_CONNECTION_NAME): DynamicModule {
+        const asyncOptions: TypeOrmModuleAsyncOptions = {
+            imports: [PropertyConfigService],
+            useFactory: (config: PropertyConfigService) => {
+                const options = config.get(DATABASES_PROPERTY);
+
+                for (const option of options) {
+                    if (isEmpty(option.name) && connection === DEFAULT_CONNECTION_NAME) {
+                        return option;
+                    }
+
+                    if (option.name === connection) {
+                        return option;
+                    }
+                }
+
+                throw new Error(`${connection} database config is not defined`);
+            },
+            inject: [PropertyConfigService],
+        };
+
+        return {
+            module: DatabaseModule,
+            imports: [TypeOrmModule.forRootAsync(asyncOptions)],
+        };
+    }
+}

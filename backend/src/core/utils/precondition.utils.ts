@@ -6,6 +6,16 @@ export function isUndefined(arg: any) {
     return !isDefined(arg);
 }
 
+export function allDefined(...args: any[]) {
+    for (const arg in args) {
+        if (isUndefined(arg)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function isEmpty(arg: string | any[] | Map<any, any> | Set<any>) {
     if (!isDefined(arg)) {
         return true;
