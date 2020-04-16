@@ -56,8 +56,8 @@ export async function runMigrations(connection: Connection) {
 
 /**
  * Executes typeorm cli command.
- * If ormconfig.json exists then use it, else dynamically generates
- * config file and removes after command execution.
+ * If ormconfig.json exists then uses it, else dynamically generates
+ * config file and removes it after command execution.
  * Current database connection herewith will be closed.
  * Use this function only with management scripts.
  * @param connection database connection instance
