@@ -1,4 +1,4 @@
-import { registerAs } from '@nestjs/config';
+import { registerAs } from '../config/property-config.utils';
 
 export default registerAs('databases', () => ([
     {

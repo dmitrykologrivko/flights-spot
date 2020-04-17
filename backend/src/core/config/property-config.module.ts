@@ -4,6 +4,9 @@ import { ConfigModuleOptions } from '@nestjs/config/dist/interfaces/config-modul
 import { ConfigFactory } from '@nestjs/config/dist/interfaces/config-factory.interface';
 import { PropertyConfigService } from './property-config.service';
 
+export type PropertyConfigModuleOptions = ConfigModuleOptions;
+export type PropertyConfigFactory = ConfigFactory;
+
 @Global()
 @Module({
     imports: [ConfigModule],
@@ -12,14 +15,14 @@ import { PropertyConfigService } from './property-config.service';
 })
 export class PropertyConfigModule {
 
-    static forRoot(options: ConfigModuleOptions): DynamicModule {
+    static forRoot(options: PropertyConfigModuleOptions): DynamicModule {
         return {
             module: PropertyConfigModule,
             imports: [ConfigModule.forRoot(options)],
         };
     }
 
-    static forFeature(config: ConfigFactory): DynamicModule {
+    static forFeature(config: PropertyConfigFactory): DynamicModule {
         return {
             module: PropertyConfigModule,
             imports: [ConfigModule.forFeature(config)],

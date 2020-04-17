@@ -12,23 +12,33 @@ import { DATABASES_PROPERTY } from './database-property.constants';
 import { MigrationsCommand } from './migrations.command';
 import databaseConfig from './database.config';
 
+export type DatabaseModuleOptions = TypeOrmModuleOptions;
+export type DatabaseModuleAsyncOptions = TypeOrmModuleAsyncOptions;
+
 @Module({
     imports: [PropertyConfigModule.forFeature(databaseConfig)],
     providers: [MigrationsCommand],
 })
 export class DatabaseModule {
 
-    static withOptions(options?: TypeOrmModuleOptions): DynamicModule {
+    static withOptions(options: DatabaseModuleOptions): DynamicModule {
         return {
             module: DatabaseModule,
             imports: [TypeOrmModule.forRoot(options)],
         };
     }
 
-    static withOptionsAsync(options: TypeOrmModuleAsyncOptions): DynamicModule {
+    static withOptionsAsync(options: DatabaseModuleAsyncOptions): DynamicModule {
         return {
             module: DatabaseModule,
             imports: [TypeOrmModule.forRootAsync(options)],
+        };
+    }
+
+    static withConfigFile(): DynamicModule {
+        return {
+            module: DatabaseModule,
+            imports: [TypeOrmModule.forRoot()],
         };
     }
 
