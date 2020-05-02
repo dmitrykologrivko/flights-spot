@@ -1,9 +1,7 @@
 import { Module, DynamicModule } from '@nestjs/common';
 import { ModuleMetadata } from '@nestjs/common/interfaces';
-import {
-    DEVELOPMENT_ENVIRONMENT,
-    PRODUCTION_ENVIRONMENT,
-} from './constants/enviroment.constants';
+import { DEVELOPMENT_ENVIRONMENT } from './environment/environment.constants';
+import { isProductionEnvironment } from './environment/environment.utils';
 import {
     ConfigModule,
     ConfigModuleOptions,
@@ -52,7 +50,7 @@ export class CoreModule {
     private static connectConfig(imports: any[], options: CoreModuleOptions) {
         const defaultOptions = {
             isGlobal: true,
-            ignoreEnvFile: process.env.NODE_ENV === PRODUCTION_ENVIRONMENT,
+            ignoreEnvFile: isProductionEnvironment(),
             envFilePath: `${process.env.NODE_ENV || DEVELOPMENT_ENVIRONMENT}.env`,
         };
 
