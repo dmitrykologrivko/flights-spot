@@ -1,5 +1,5 @@
 import { Global, Module, DynamicModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { ConfigModuleOptions } from '@nestjs/config/dist/interfaces/config-module-options.interface';
 import { ConfigFactory } from '@nestjs/config/dist/interfaces/config-factory.interface';
 import { PropertyConfigService } from './property-config.service';
@@ -9,23 +9,23 @@ export type PropertyConfigFactory = ConfigFactory;
 
 @Global()
 @Module({
-    imports: [ConfigModule],
+    imports: [NestConfigModule],
     providers: [PropertyConfigService],
-    exports: [ConfigModule, PropertyConfigService],
+    exports: [NestConfigModule, PropertyConfigService],
 })
 export class PropertyConfigModule {
 
     static forRoot(options: PropertyConfigModuleOptions): DynamicModule {
         return {
             module: PropertyConfigModule,
-            imports: [ConfigModule.forRoot(options)],
+            imports: [NestConfigModule.forRoot(options)],
         };
     }
 
     static forFeature(config: PropertyConfigFactory): DynamicModule {
         return {
             module: PropertyConfigModule,
-            imports: [ConfigModule.forFeature(config)],
+            imports: [NestConfigModule.forFeature(config)],
         };
     }
 }

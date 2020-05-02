@@ -5,10 +5,10 @@ import {
     PRODUCTION_ENVIRONMENT,
 } from './constants/enviroment.constants';
 import {
-    PropertyConfigModule,
-    PropertyConfigModuleOptions,
-    PropertyConfigFactory,
-} from './config';
+    ConfigModule,
+    ConfigModuleOptions,
+    ConfigFactory,
+} from './config/config.module';
 import {
     DatabaseModule,
     DatabaseModuleOptions,
@@ -17,15 +17,10 @@ import {
 import { ServerModule } from './server';
 import { ManagementModule } from './management';
 import { UtilsModule } from './utils';
-import {
-    isDefined,
-    isUndefined,
-    isNotEmpty,
-} from './utils/precondition.utils';
-import coreConfig from './core.config';
+import { isNotEmpty } from './utils/precondition.utils';
 
 export interface CoreModuleOptions extends Pick<ModuleMetadata, 'imports'> {
-    config?: PropertyConfigModuleOptions | PropertyConfigFactory[];
+    config?: ConfigModuleOptions | ConfigFactory[];
     database?: {
         useConfigFile?: boolean;
         options?: DatabaseModuleOptions | DatabaseModuleOptions[];
@@ -35,12 +30,10 @@ export interface CoreModuleOptions extends Pick<ModuleMetadata, 'imports'> {
 
 @Module({
     imports: [
-        PropertyConfigModule.forFeature(coreConfig),
         ServerModule,
         ManagementModule,
         UtilsModule,
     ],
-    exports: [PropertyConfigModule],
 })
 export class CoreModule {
 
@@ -63,29 +56,29 @@ export class CoreModule {
             envFilePath: `${process.env.NODE_ENV || DEVELOPMENT_ENVIRONMENT}.env`,
         };
 
-        if (isUndefined(options.config)) {
-            imports.push(PropertyConfigModule.forRoot(defaultOptions));
+        if (!options.config) {
+            imports.push(ConfigModule.forRoot(defaultOptions));
             return;
         }
 
         if (Array.isArray(options.config)) {
-            imports.push(PropertyConfigModule.forRoot({
+            imports.push(ConfigModule.forRoot({
                 ...defaultOptions,
                 load: options.config,
             }));
             return;
         }
 
-        imports.push(PropertyConfigModule.forRoot(options.config));
+        imports.push(ConfigModule.forRoot(options.config));
     }
 
     private static connectDatabase(imports: any[], options: CoreModuleOptions) {
-        if (isDefined(options.database) && options.database.useConfigFile) {
+        if (options.database && options.database.useConfigFile) {
             imports.push(DatabaseModule.withConfigFile());
             return;
         }
 
-        if (isDefined(options.database) && isDefined(options.database.options)) {
+        if (options.database?.options) {
             if (Array.isArray(options.database.options)) {
                 for (const currentOptions of options.database.options) {
                     imports.push(DatabaseModule.withOptions(currentOptions));
@@ -96,7 +89,7 @@ export class CoreModule {
             return;
         }
 
-        const connections = isDefined(options.database) && isNotEmpty(options.database.connections)
+        const connections = isNotEmpty(options.database?.connections)
             ? options.database.connections
             : [DEFAULT_CONNECTION_NAME];
 

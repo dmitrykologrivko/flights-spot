@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { useContainer } from 'class-validator';
-import { PropertyConfigService } from '../config/property-config.service';
-import { SERVER_PORT_PROPERTY } from '../server/server.property.constants';
+import { PropertyConfigService } from '../config/property-config/property-config.service';
+import { SERVER_PORT_PROPERTY } from '../server/server.properties';
 import { Bootstrapper, BootstrapOptions } from './bootstrap.interfaces';
 
 export async function bootstrapServer(options: BootstrapOptions): Promise<Bootstrapper> {

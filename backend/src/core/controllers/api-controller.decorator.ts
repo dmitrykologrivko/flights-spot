@@ -1,5 +1,5 @@
 import { Controller, ControllerOptions } from '@nestjs/common';
-import { isEmpty, isUndefined } from '@core/utils';
+import { isEmpty } from '@core/utils';
 
 export interface ApiControllerOptions extends ControllerOptions {
     useGlobalPrefix?: boolean;
@@ -16,7 +16,7 @@ export function ApiController(prefix: string): ClassDecorator;
 export function ApiController(options: ApiControllerOptions): ClassDecorator;
 
 export function ApiController(prefixOrOptions?: string | ApiControllerOptions) {
-    if (isUndefined(prefixOrOptions)) {
+    if (!prefixOrOptions) {
         return Controller();
     }
 
@@ -28,7 +28,7 @@ export function ApiController(prefixOrOptions?: string | ApiControllerOptions) {
         ? ''
         : `${prefixOrOptions.rootPrefix || 'api'}/`;
 
-    const versionPrefix = isUndefined(prefixOrOptions.version) && isEmpty(prefixOrOptions.versionPrefix)
+    const versionPrefix = !prefixOrOptions.version && !prefixOrOptions.versionPrefix
         ? ''
         : `${prefixOrOptions.version ? `v${prefixOrOptions.version}` : prefixOrOptions.versionPrefix}/`;
 
@@ -36,7 +36,7 @@ export function ApiController(prefixOrOptions?: string | ApiControllerOptions) {
         ? ''
         : `${prefixOrOptions.additionalPrefixes.join('/')}/`;
 
-    const prefix = isEmpty(prefixOrOptions.path)
+    const prefix = prefixOrOptions.path
         ? ''
         : prefixOrOptions.path;
 

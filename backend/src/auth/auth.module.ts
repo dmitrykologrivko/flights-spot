@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { PropertyConfigService } from '@core/config';
+import { DatabaseModule } from '@core/database';
+import { ConfigModule, PropertyConfigService } from '@core/config';
 import {
     AUTH_JWT_SECRET_PROPERTY,
     AUTH_JWT_EXPIRES_IN_PROPERTY,
@@ -51,7 +50,7 @@ const jwtAsyncOptions = {
 @Module({
     imports: [
         ConfigModule.forFeature(authConfig),
-        TypeOrmModule.forFeature([User, Group, Permission]),
+        DatabaseModule.withEntities([User, Group, Permission], { modulePath: __dirname }),
         PassportModule,
         JwtModule.registerAsync(jwtAsyncOptions),
     ],
@@ -72,7 +71,7 @@ const jwtAsyncOptions = {
     ],
     controllers: [JwtAuthController],
     exports: [
-        TypeOrmModule,
+        DatabaseModule,
         LocalAuthGuard,
         JwtAuthGuard,
         IsAuthenticatedGuard,

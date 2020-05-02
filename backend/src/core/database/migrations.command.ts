@@ -1,5 +1,6 @@
 import { ModuleRef } from '@nestjs/core';
 import { getConnectionToken } from '@nestjs/typeorm';
+import { PropertyConfigService } from '../config/property-config/property-config.service';
 import {
     Command,
     Handler,
@@ -10,12 +11,15 @@ import {
     generateMigration,
     runMigrations,
 } from './typeorm.utils';
-import { isDefined } from '../utils/precondition.utils';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
+import { MIGRATIONS_PROPERTY } from './database.properties';
 
 @Command({ name: 'migrations' })
 export class MigrationsCommand {
-    constructor(private readonly moduleRef: ModuleRef) {}
+    constructor(
+        private readonly moduleRef: ModuleRef,
+        private readonly config: PropertyConfigService,
+    ) {}
 
     @Handler({ shortcut: 'create' })
     async createMigration(
@@ -28,8 +32,19 @@ export class MigrationsCommand {
             defaultValue: DEFAULT_CONNECTION_NAME,
         })
         connection?: string,
+
+        @CliArgument({
+            name: 'destination',
+            optional: true,
+        })
+        destination?: string,
     ) {
-        await createMigration(this.getConnectionByName(connection), migrationName);
+        await createMigration(
+            this.getConnectionByName(connection),
+            migrationName,
+            destination,
+            this.config.get(MIGRATIONS_PROPERTY),
+        );
     }
 
     @Handler({ shortcut: 'generate' })
@@ -47,8 +62,19 @@ export class MigrationsCommand {
             defaultValue: DEFAULT_CONNECTION_NAME,
         })
         connection?: string,
+
+        @CliArgument({
+            name: 'destination',
+            optional: true,
+        })
+        destination?: string,
     ) {
-        await generateMigration(this.getConnectionByName(connection), migrationName);
+        await generateMigration(
+            this.getConnectionByName(connection),
+            migrationName,
+            destination,
+            this.config.get(MIGRATIONS_PROPERTY),
+        );
     }
 
     @Handler({ shortcut: 'run' })
@@ -66,7 +92,7 @@ export class MigrationsCommand {
     private getConnectionByName(name: string) {
         const connection = this.moduleRef.get(getConnectionToken(name) as string, { strict: false });
 
-        if (isDefined(connection)) {
+        if (connection) {
             return connection;
         }
 

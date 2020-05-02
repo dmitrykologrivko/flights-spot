@@ -17,7 +17,7 @@ export function allDefined(...args: any[]) {
 }
 
 export function isEmpty(arg: string | any[] | Map<any, any> | Set<any>) {
-    if (!isDefined(arg)) {
+    if (isUndefined(arg)) {
         return true;
     }
 
