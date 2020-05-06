@@ -16,7 +16,5 @@ export default () => {
         }],
     }, appConfig);
 
-    console.log(productionAppConfig)
-
     return isProductionEnvironment() ? productionAppConfig : appConfig;
 };

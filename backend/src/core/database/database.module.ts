@@ -6,15 +6,11 @@ import {
 } from '@nestjs/typeorm';
 import { ConfigModule } from '../config/config.module';
 import { PropertyConfigService } from '../config/property-config/property-config.service';
-import {
-    DEFAULT_CONNECTION_NAME,
-    ENTITY_GLOB_PATTERN,
-    MIGRATIONS_GLOB_PATTERN,
-} from './database.constants';
+import { DEFAULT_CONNECTION_NAME } from './database.constants';
 import { DATABASES_PROPERTY } from './database.properties';
 import { MigrationsCommand } from './migrations.command';
 import { EntityMetadataStorage } from './entity-metadata-storage.service';
-import { EntityModuleOptions, DatabaseConnection } from './database.interfaces';
+import { EntityOptions, DatabaseConnection } from './database.interfaces';
 import databaseConfig from './database.config';
 
 export type DatabaseModuleOptions = TypeOrmModuleOptions;
@@ -84,39 +80,56 @@ export class DatabaseModule {
 
     static withEntities(
         entities: Function[] = [],
-        moduleOptions?: EntityModuleOptions,
+        options: EntityOptions = {},
         connection: DatabaseConnection = DEFAULT_CONNECTION_NAME,
     ): DynamicModule {
-        if (moduleOptions) {
-            this.extendEntityModuleOptions(moduleOptions);
-            EntityMetadataStorage.addEntityModuleOptions(moduleOptions);
-        }
+        options.entities = entities;
+
+        this.addEntityOptions(options);
 
         return {
             module: DatabaseModule,
-            imports: [TypeOrmModule.forFeature(entities, moduleOptions?.connection || connection)],
+            imports: [TypeOrmModule.forFeature(entities, options?.connection || connection)],
             exports: [TypeOrmModule],
         };
     }
 
-    static withEntityModuleOptions(moduleOptions: EntityModuleOptions): DynamicModule {
-        this.extendEntityModuleOptions(moduleOptions);
-        EntityMetadataStorage.addEntityModuleOptions(moduleOptions);
-
+    static withEntityOptions(options: EntityOptions): DynamicModule {
+        this.addEntityOptions(options);
         return { module: DatabaseModule };
     }
 
     private static extendDatabaseOptions(connection: string, databaseOptions: TypeOrmModuleOptions) {
-        const entityModuleOptions = EntityMetadataStorage.getEntityModuleOptionsByConnection(connection);
+        const entityOptions = EntityMetadataStorage.getEntityOptionsByConnection(connection);
 
-        if (!entityModuleOptions) {
+        if (!entityOptions) {
             return databaseOptions;
         }
 
-        const entities = databaseOptions.entities || [];
-        const migrations = databaseOptions.migrations || [];
+        let entities = databaseOptions.entities || [];
+        let migrations = databaseOptions.migrations || [];
 
-        for (const options of entityModuleOptions) {
+        for (const options of entityOptions) {
+            if (options.entities) {
+                const entitiesNames = entities
+                    .filter(entity => typeof entity === 'function')
+                    .map(entity => (entity as Function).name);
+
+                entities = entities.concat(
+                    options.entities.filter(entity => !entitiesNames.includes(entity.name)),
+                );
+            }
+
+            if (options.migrations) {
+                const migrationsNames = entities
+                    .filter(migration => typeof migration === 'function')
+                    .map(migration => (migration as Function).name);
+
+                migrations = migrations.concat(
+                    options.migrations.filter(migration => !migrationsNames.includes(migration.name)),
+                );
+            }
+
             if (options.entitiesPath) {
                 entities.push(options.entitiesPath);
             }
@@ -129,17 +142,11 @@ export class DatabaseModule {
         return { ...databaseOptions, entities, migrations };
     }
 
-    private static extendEntityModuleOptions(options: EntityModuleOptions) {
+    private static addEntityOptions(options: EntityOptions) {
         if (!options.connection) {
             options.connection = DEFAULT_CONNECTION_NAME;
         }
 
-        if (options.modulePath && !options.entitiesPath) {
-            options.entitiesPath = `${options.modulePath}${ENTITY_GLOB_PATTERN}`;
-        }
-
-        if (options.modulePath && !options.migrationsPath) {
-            options.migrationsPath = `${options.modulePath}${MIGRATIONS_GLOB_PATTERN}`;
-        }
+        EntityMetadataStorage.addEntityOptions(options);
     }
 }

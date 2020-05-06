@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseConnection, EntityModuleOptions } from './database.interfaces';
+import { DatabaseConnection, EntityOptions } from './database.interfaces';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
 
 @Injectable()
 export class EntityMetadataStorage {
 
-    private static readonly storage = new Map<string, EntityModuleOptions[]>();
+    private static readonly storage = new Map<string, EntityOptions[]>();
 
-    static addEntityModuleOptions(options: EntityModuleOptions) {
+    static addEntityOptions(options: EntityOptions) {
         const token = this.getConnectionToken(options.connection || DEFAULT_CONNECTION_NAME);
         let collection = this.storage.get(token);
 
@@ -20,16 +20,16 @@ export class EntityMetadataStorage {
         this.storage.set(token, collection);
     }
 
-    static getEntityModuleOptionsByConnection(connection: DatabaseConnection) {
+    static getEntityOptionsByConnection(connection: DatabaseConnection) {
         const token = this.getConnectionToken(connection);
         return this.storage.get(token);
     }
 
-    static getConnectionToken(connection: DatabaseConnection) {
+    private static getConnectionToken(connection: DatabaseConnection) {
         return typeof connection === 'string' ? connection : connection.name;
     }
 
-    getEntityModuleOptionsByConnection(connection: DatabaseConnection) {
-        return EntityMetadataStorage.getEntityModuleOptionsByConnection(connection);
+    getEntityOptionsByConnection(connection: DatabaseConnection) {
+        return EntityMetadataStorage.getEntityOptionsByConnection(connection);
     }
 }

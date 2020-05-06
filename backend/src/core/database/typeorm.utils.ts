@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as childProcess from 'child_process';
 import { promisify } from 'util';
 import { Logger } from '@nestjs/common';
-import { Connection, ConnectionOptions } from 'typeorm';
+import { Connection } from 'typeorm';
+
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
 const exec = promisify(childProcess.exec);
@@ -18,62 +19,10 @@ export enum TypeormCommands {
 export interface TypeormCommandOptions {
 
     /**
-     * execute typeorm cli command through TypeScript interpreter
+     * Execute typeorm cli command through TypeScript interpreter
      */
     useTypescript?: boolean;
 
-}
-
-export interface MigrationsCommandOptions extends TypeormCommandOptions {
-
-    /**
-     * Lookup src folder for entities and migrations
-     */
-    lookupSourceDir?: boolean;
-
-    /**
-     * Source files dir
-     */
-    sourceDir?: string;
-
-    /**
-     * Build files dir
-     */
-    outDir?: string;
-
-}
-
-/**
- * Extends database connection options for migrations command
- * @param connectionOptions database connection options
- * @param commandOptions extra options for executing typeorm migrations cli command
- */
-function extendConnectionOptionsForMigrations(
-    connectionOptions: ConnectionOptions,
-    commandOptions: MigrationsCommandOptions,
-) {
-    const entities = connectionOptions.entities || [];
-    const migrations = connectionOptions.migrations || [];
-
-    if (commandOptions.lookupSourceDir) {
-        const isEligiblePath = (path: any) => typeof path === 'string' &&
-            path.includes(commandOptions.outDir) &&
-            !path.includes('node_modules');
-
-        const replacePath = (path: string) => path.replace(commandOptions.outDir, commandOptions.sourceDir);
-
-        entities.push(
-            ...entities.filter(path => isEligiblePath(path))
-                .map(path => replacePath(path as string)),
-        );
-
-        migrations.push(
-            ...migrations.filter(path => isEligiblePath(path))
-                .map(path => replacePath(path as string)),
-        );
-    }
-
-    return { ...connectionOptions, entities, migrations };
 }
 
 /**
@@ -82,21 +31,22 @@ function extendConnectionOptionsForMigrations(
  * @param connection database connection instance
  * @param migrationName migration name
  * @param destination directory where migration should be created
- * @param commandOptions extra options for executing typeorm migrations cli command
+ * @param commandOptions options for executing typeorm migrations cli command
  */
 export async function createMigration(
     connection: Connection,
     migrationName: string,
     destination?: string,
-    commandOptions: MigrationsCommandOptions = {},
+    commandOptions: TypeormCommandOptions = {},
 ) {
     await execTypeormCommand(
         connection,
         TypeormCommands.MIGRATION_CREATE,
         `-n ${migrationName} -c ${connection.name} ${destination ? `-d ${destination}` : ''}`,
         commandOptions,
-        extendConnectionOptionsForMigrations(connection.options, commandOptions),
     );
+
+    await createIndexFile(destination || connection.options.cli?.migrationsDir);
 }
 
 /**
@@ -105,21 +55,22 @@ export async function createMigration(
  * @param connection database connection instance
  * @param migrationName migration name
  * @param destination directory where migration should be created
- * @param commandOptions extra options for executing typeorm migrations cli command
+ * @param commandOptions options for executing typeorm migrations cli command
  */
 export async function generateMigration(
     connection: Connection,
     migrationName: string,
     destination?: string,
-    commandOptions: MigrationsCommandOptions = {},
+    commandOptions: TypeormCommandOptions = {},
 ) {
     await execTypeormCommand(
         connection,
         TypeormCommands.MIGRATION_GENERATE,
         `-n ${migrationName} -c ${connection.name} ${destination ? `-d ${destination}` : ''}`,
         commandOptions,
-        extendConnectionOptionsForMigrations(connection.options, commandOptions),
     );
+
+    await createIndexFile(destination || connection.options.cli?.migrationsDir);
 }
 
 /**
@@ -141,17 +92,15 @@ export async function runMigrations(connection: Connection) {
  * @param connection database connection instance
  * @param command typeorm command
  * @param args typeorm command arguments
- * @param commandOptions extra options for executing typeorm cli command
- * @param connectionOptions override database connection options
+ * @param commandOptions options for executing typeorm cli command
  */
 export async function execTypeormCommand(
     connection: Connection,
     command: TypeormCommands,
     args: string = '',
     commandOptions?: TypeormCommandOptions,
-    connectionOptions?: ConnectionOptions,
 ) {
-    const options = connectionOptions || connection.options;
+    const options = connection.options;
 
     const configName = 'export_ormconfig.json';
     const configPath = `${process.cwd()}/${configName}`;
@@ -176,4 +125,16 @@ export async function execTypeormCommand(
 
     // Delete temp database config file
     await unlink(configPath);
+}
+
+/**
+ * Creates index.ts file for provided path to source files folder
+ * @param path source files folder path
+ */
+async function createIndexFile(path: string) {
+    const { stderr } = await exec(`node ./node_modules/create-ts-index/dist/cti.js create -w -b ${path}`);
+
+    if (stderr) {
+        Logger.error(stderr);
+    }
 }

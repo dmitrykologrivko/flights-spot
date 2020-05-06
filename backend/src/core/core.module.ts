@@ -35,7 +35,7 @@ export interface CoreModuleOptions extends Pick<ModuleMetadata, 'imports'> {
 })
 export class CoreModule {
 
-    static forRoot(options: CoreModuleOptions = {}): DynamicModule {
+    static forRoot(options: CoreModuleOptions): DynamicModule {
         const imports = options.imports || [];
 
         this.connectConfig(imports, options);
@@ -71,7 +71,7 @@ export class CoreModule {
     }
 
     private static connectDatabase(imports: any[], options: CoreModuleOptions) {
-        if (options.database && options.database.useConfigFile) {
+        if (options.database?.useConfigFile) {
             imports.push(DatabaseModule.withConfigFile());
             return;
         }

@@ -1,6 +1,5 @@
 import { ModuleRef } from '@nestjs/core';
 import { getConnectionToken } from '@nestjs/typeorm';
-import { PropertyConfigService } from '../config/property-config/property-config.service';
 import {
     Command,
     Handler,
@@ -12,13 +11,11 @@ import {
     runMigrations,
 } from './typeorm.utils';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
-import { MIGRATIONS_PROPERTY } from './database.properties';
 
 @Command({ name: 'migrations' })
 export class MigrationsCommand {
     constructor(
         private readonly moduleRef: ModuleRef,
-        private readonly config: PropertyConfigService,
     ) {}
 
     @Handler({ shortcut: 'create' })
@@ -38,12 +35,19 @@ export class MigrationsCommand {
             optional: true,
         })
         destination?: string,
+
+        @CliArgument({
+            name: 'useTypescript',
+            optional: true,
+            defaultValue: false,
+        })
+        useTypescript?: boolean,
     ) {
         await createMigration(
             this.getConnectionByName(connection),
             migrationName,
             destination,
-            this.config.get(MIGRATIONS_PROPERTY),
+            { useTypescript },
         );
     }
 
@@ -68,12 +72,19 @@ export class MigrationsCommand {
             optional: true,
         })
         destination?: string,
+
+        @CliArgument({
+            name: 'useTypescript',
+            optional: true,
+            defaultValue: false,
+        })
+        useTypescript?: boolean,
     ) {
         await generateMigration(
             this.getConnectionByName(connection),
             migrationName,
             destination,
-            this.config.get(MIGRATIONS_PROPERTY),
+            { useTypescript },
         );
     }
 
