@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as childProcess from 'child_process';
 import { promisify } from 'util';
 import { Logger } from '@nestjs/common';
-import { Connection } from 'typeorm';
+import { Connection, ConnectionOptions } from 'typeorm';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -22,6 +22,11 @@ export interface TypeormCommandOptions {
      * Execute typeorm cli command through TypeScript interpreter
      */
     useTypescript?: boolean;
+
+    /**
+     * Overridden typeorm connection options
+     */
+    connectionOptions?: ConnectionOptions;
 
 }
 
@@ -100,7 +105,7 @@ export async function execTypeormCommand(
     args: string = '',
     commandOptions?: TypeormCommandOptions,
 ) {
-    const options = connection.options;
+    const options = commandOptions?.connectionOptions || connection.options;
 
     const configName = 'export_ormconfig.json';
     const configPath = `${process.cwd()}/${configName}`;

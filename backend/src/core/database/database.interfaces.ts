@@ -14,15 +14,10 @@ export interface EntityOptions {
      */
     migrations?: Function[];
 
-    /**
-     * Path to entities
-     */
-    entitiesPath?: string;
-
-    /**
-     * Path to migrations
-     */
-    migrationsPath?: string;
+    cli?: {
+        entities?: string[] | string;
+        migrations?: string[] | string;
+    };
 
     /**
      * Database connection

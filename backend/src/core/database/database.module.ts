@@ -129,14 +129,6 @@ export class DatabaseModule {
                     options.migrations.filter(migration => !migrationsNames.includes(migration.name)),
                 );
             }
-
-            if (options.entitiesPath) {
-                entities.push(options.entitiesPath);
-            }
-
-            if (options.migrationsPath) {
-                migrations.push(options.migrationsPath);
-            }
         }
 
         return { ...databaseOptions, entities, migrations };
