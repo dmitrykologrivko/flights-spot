@@ -1,1 +1,2 @@
-export * from './property.constants';
+export * from './auth.properties';
+export * from './auth.types';

@@ -5,7 +5,7 @@ import { PropertyConfigService } from '@core/config';
 import { ApplicationService } from '@core/services';
 import { ClassTransformer, ClassValidator } from '@core/utils';
 import { EntityNotFoundException, ValidationException } from '@core/exceptions';
-import { AUTH_SALT_ROUNDS_PROPERTY } from '../constants/property.constants';
+import { AUTH_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
 import { CreateUserInput } from '../dto/create-user.input';
 import { CreateUserOutput } from '../dto/create-user.output';

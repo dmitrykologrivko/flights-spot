@@ -6,7 +6,7 @@ import { ConfigModule, PropertyConfigService } from '@core/config';
 import {
     AUTH_JWT_SECRET_PROPERTY,
     AUTH_JWT_EXPIRES_IN_PROPERTY,
-} from './constants/property.constants';
+} from './constants/auth.properties';
 import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
 import { Permission } from './entities/permission.entity';
