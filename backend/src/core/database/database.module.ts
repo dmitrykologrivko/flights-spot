@@ -5,7 +5,7 @@ import {
     TypeOrmModuleAsyncOptions,
 } from '@nestjs/typeorm';
 import { ConfigModule } from '../config/config.module';
-import { PropertyConfigService } from '../config/property-config/property-config.service';
+import { PropertyConfigService } from '../config/property-config.service';
 import { DEFAULT_CONNECTION_NAME } from './database.constants';
 import { DATABASES_PROPERTY } from './database.properties';
 import { MigrationsCommand } from './migrations.command';
