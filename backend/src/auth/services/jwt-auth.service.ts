@@ -14,11 +14,10 @@ import { ValidatePayloadInput } from '../dto/validate-payload.input';
 import { ValidatePayloadOutput } from '../dto/validate-payload.output';
 
 type ValidatePayloadResult = Promise<Result<ValidatePayloadOutput, EntityNotFoundException>>;
-type LoginResult = Promise<Result<JwtLoginOutput, EntityNotFoundException | IncorrectPasswordException>>;
+type LoginResult = Promise<Result<JwtLoginOutput, EntityNotFoundException>>;
 
 @ApplicationService()
 export class JwtAuthService extends BaseAuthService {
-
     constructor(
         @InjectRepository(User)
         protected readonly userRepository: Repository<User>,

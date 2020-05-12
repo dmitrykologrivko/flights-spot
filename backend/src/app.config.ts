@@ -1,4 +1,7 @@
-import { isProductionEnvironment } from '@core/environment';
+import {
+    isProductionEnvironment,
+    isTestEnvironment,
+} from '@core/environment';
 
 export default () => {
     const appConfig = {};
@@ -16,5 +19,22 @@ export default () => {
         }],
     }, appConfig);
 
-    return isProductionEnvironment() ? productionAppConfig : appConfig;
+    const testAppConfig = Object.assign({
+        databases: [{
+            type: 'sqlite',
+            database: 'test_database',
+            autoLoadEntities: true,
+            synchronize: true,
+        }],
+    }, appConfig);
+
+    if (isProductionEnvironment()) {
+        return productionAppConfig;
+    }
+
+    if (isTestEnvironment()) {
+        return testAppConfig;
+    }
+
+    return appConfig;
 };

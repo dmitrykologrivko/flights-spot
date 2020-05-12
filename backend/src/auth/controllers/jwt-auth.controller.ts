@@ -5,7 +5,6 @@ import { JwtAuthService } from '../services/jwt-auth.service';
 
 @ApiController('auth')
 export class JwtAuthController {
-
     constructor(
         private authService: JwtAuthService,
     ) {}
