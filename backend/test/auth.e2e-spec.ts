@@ -38,6 +38,22 @@ describe('JwtAuthController (e2e)', () => {
                 .expect(RESPONSE_UNAUTHORIZED);
         });
 
+        it('when user is inactive should return 401 error', async () => {
+            const user = await UserFactory.makeUser();
+            user.deactivateUser();
+            await userRepository.save(user);
+
+            return request(app.getHttpServer())
+                .post('/api/auth/login')
+                .send({
+                    username: UserFactory.DEFAULT_USERNAME,
+                    password: UserFactory.DEFAULT_PASSWORD,
+                })
+                .set('Accept', 'application/json')
+                .expect(401)
+                .expect(RESPONSE_UNAUTHORIZED);
+        });
+
         it('when wrong password is provided should return 401 error', async () => {
             const user = await UserFactory.makeUser();
             await userRepository.save(user);
