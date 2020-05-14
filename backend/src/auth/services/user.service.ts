@@ -14,7 +14,7 @@ import { FindUserInput } from '../dto/find-user.input';
 import { FindUserOutput } from '../dto/find-user.output';
 
 type CreateUserResult = Promise<Result<CreateUserOutput, ValidationException[]>>;
-type ChangePasswordResult = Promise<Result<void, ValidationException[] | EntityNotFoundException>>;
+type ChangePasswordResult = Promise<Result<void, ValidationException[]>>;
 type FindUserResult = Promise<Result<FindUserOutput, EntityNotFoundException>>;
 
 @ApplicationService()
