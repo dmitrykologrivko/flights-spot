@@ -14,7 +14,7 @@ import { Permission } from './entities/permission.entity';
 import { AuthService } from './services/auth.service';
 import { JwtAuthService } from './services/jwt-auth.service';
 import { UserService } from './services/user.service';
-import { UserRegistrationService } from './services/user-registration.service';
+import { UserVerificationService } from './services/user-verification.service';
 import { JwtAuthController } from './controllers/jwt-auth.controller';
 import { UserController } from './controllers/user.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -65,7 +65,7 @@ const jwtAsyncOptions = {
             useClass: ValidationPipe,
         },
         UserService,
-        UserRegistrationService,
+        UserVerificationService,
         AuthService,
         JwtAuthService,
         LocalAuthGuard,

@@ -4,46 +4,55 @@ import { PropertyConfigService } from '@core/config';
 import { ValidationException, EntityNotFoundException } from '@core/exceptions';
 import { ClassTransformer } from '@core/utils';
 import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing';
+import { AUTH_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
 import { UserService } from '../../services/user.service';
-import { UserRegistrationService } from '../../services/user-registration.service';
+import { UserVerificationService } from '../../services/user-verification.service';
 import { UsernameUniqueConstraint } from '../../validation/username-unique.constraint';
 import { EmailUniqueConstraint } from '../../validation/email-unique.constraint';
+import { PasswordMatchConstraint } from '../../validation/password-match.constraint';
 import { User } from '../../entities/user.entity';
 import { CreateUserInput } from '../../dto/create-user.input';
 import { CreateUserOutput } from '../../dto/create-user.output';
+import { ChangePasswordInput } from '../../dto/change-password.input';
 import { FindUserInput } from '../../dto/find-user.input';
 import { FindUserOutput } from '../../dto/find-user.output';
 import { UserFactory } from '../factories/user.factory';
 
 describe('UserService', () => {
+    const USERNAME_QUERY = { where: { _username: UserFactory.DEFAULT_USERNAME } };
+
     let container: SimpleIocContainer;
-    let userRegistrationService: MockProxy<UserRegistrationService> & UserRegistrationService;
+    let userVerificationService: MockProxy<UserVerificationService> & UserVerificationService;
     let userRepository: MockProxy<Repository<User>>;
     let config: MockProxy<PropertyConfigService> & PropertyConfigService;
     let usernameUniqueConstraint: UsernameUniqueConstraint;
     let emailUniqueConstraint: EmailUniqueConstraint;
+    let passwordMatchConstraint: PasswordMatchConstraint;
     let service: UserService;
 
     let user: User;
     let createUserInput: CreateUserInput;
     let createUserOutput: CreateUserOutput;
+    let changePasswordInput: ChangePasswordInput;
     let findUserInput: FindUserInput;
     let findUserOutput: FindUserOutput;
 
     beforeEach(async () => {
         container = createClassValidatorContainer();
 
-        userRegistrationService = mock<UserRegistrationService>();
+        userVerificationService = mock<UserVerificationService>();
         userRepository = mock<Repository<User>>();
         config = mock<PropertyConfigService>();
-        usernameUniqueConstraint = new UsernameUniqueConstraint(userRegistrationService);
-        emailUniqueConstraint = new EmailUniqueConstraint(userRegistrationService);
+        usernameUniqueConstraint = new UsernameUniqueConstraint(userVerificationService);
+        emailUniqueConstraint = new EmailUniqueConstraint(userVerificationService);
+        passwordMatchConstraint = new PasswordMatchConstraint(userVerificationService);
 
         service = new UserService(userRepository, config);
 
-        container.register(UserRegistrationService, userRegistrationService, true);
+        container.register(UserVerificationService, userVerificationService, true);
         container.register(UsernameUniqueConstraint, usernameUniqueConstraint);
         container.register(EmailUniqueConstraint, emailUniqueConstraint);
+        container.register(PasswordMatchConstraint, passwordMatchConstraint);
 
         user = await UserFactory.makeUser();
 
@@ -58,6 +67,12 @@ describe('UserService', () => {
             isSuperuser: user.isSuperuser,
         };
         createUserOutput = ClassTransformer.toClassObject(CreateUserOutput, user);
+
+        changePasswordInput = {
+            userId: user.id,
+            currentPassword: UserFactory.DEFAULT_PASSWORD,
+            newPassword: `new${UserFactory.DEFAULT_PASSWORD}`,
+        };
 
         findUserInput = { username: user.username };
         findUserOutput = ClassTransformer.toClassObject(FindUserOutput, user);
@@ -109,8 +124,8 @@ describe('UserService', () => {
                 ),
             ];
 
-            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
 
             const createUserResult = await service.createUser({
                 email: null,
@@ -122,6 +137,9 @@ describe('UserService', () => {
 
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
+
+            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(null);
+            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(null);
         });
 
         it('when email already exists should return validation error', async () => {
@@ -135,13 +153,16 @@ describe('UserService', () => {
                 ),
             ];
 
-            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(false));
-            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(false));
+            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
 
             const createUserResult = await service.createUser(createUserInput);
 
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
+
+            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
         });
 
         it('when username already exists should return validation error', async () => {
@@ -155,24 +176,30 @@ describe('UserService', () => {
                 ),
             ];
 
-            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(false));
+            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(false));
 
             const createUserResult = await service.createUser(createUserInput);
 
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
+
+            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
         });
 
         it('when input is valid should return successful output', async () => {
-            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
             userRepository.save.mockReturnValue(Promise.resolve(user));
 
             const createUserResult = await service.createUser(createUserInput);
 
             expect(createUserResult.is_ok()).toBe(true);
             expect(createUserResult.unwrap()).toStrictEqual(createUserOutput);
+
+            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
 
             const callArg = userRepository.save.mock.calls[0][0];
 
@@ -186,6 +213,106 @@ describe('UserService', () => {
         });
     });
 
+    describe('#changePassword()', () => {
+        it('when input is not valid should return validation errors', async () => {
+            const errors: ValidationException[] = [
+                new ValidationException(
+                    'userId',
+                    null,
+                    {
+                        isDefined: 'userId should not be null or undefined',
+                    },
+                ),
+                new ValidationException(
+                    'currentPassword',
+                    null,
+                    {
+                        isNotEmpty: 'currentPassword should not be empty',
+                        minLength: 'currentPassword must be longer than or equal to 8 characters',
+                        maxLength: 'currentPassword must be shorter than or equal to 128 characters',
+                        passwordMatch: 'Does not match with current user password',
+                    },
+                ),
+                new ValidationException(
+                    'newPassword',
+                    null,
+                    {
+                        isNotEmpty: 'newPassword should not be empty',
+                        minLength: 'newPassword must be longer than or equal to 8 characters',
+                        maxLength: 'newPassword must be shorter than or equal to 128 characters',
+                    },
+                ),
+            ];
+
+            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(false));
+
+            const result = await service.changePassword({
+                userId: null,
+                currentPassword: null,
+                newPassword: null,
+            });
+
+            expect(result.is_err()).toBe(true);
+            expect(result.unwrap_err()).toStrictEqual(errors);
+
+            expect(userVerificationService.comparePassword.mock.calls[0][0]).toBe(null);
+            expect(userVerificationService.comparePassword.mock.calls[0][1]).toBe(null);
+        });
+
+        it('when current password is wrong should return validation error', async () => {
+            const wrongPassword = 'wrong-password';
+            const errors: ValidationException[] = [
+                new ValidationException(
+                    'currentPassword',
+                    wrongPassword,
+                    {
+                        passwordMatch: 'Does not match with current user password',
+                    },
+                ),
+            ];
+
+            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(false));
+
+            const result = await service.changePassword({
+                ...changePasswordInput,
+                currentPassword: wrongPassword,
+            });
+
+            expect(result.is_err()).toBe(true);
+            expect(result.unwrap_err()).toStrictEqual(errors);
+
+            expect(userVerificationService.comparePassword.mock.calls[0][0]).toBe(user.id);
+            expect(userVerificationService.comparePassword.mock.calls[0][1]).toBe(wrongPassword);
+        });
+
+        it('when input is valid should change password', async () => {
+            config.get.mockReturnValue(10);
+            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(true));
+            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+            userRepository.save.mockReturnValue(Promise.resolve(user));
+
+            expect(await user.comparePassword(changePasswordInput.currentPassword)).toBeTruthy();
+
+            const result = await service.changePassword(changePasswordInput);
+
+            expect(result.is_ok()).toBe(true);
+            expect(result.unwrap()).toBeNull();
+
+            expect(await user.comparePassword(changePasswordInput.newPassword)).toBeTruthy();
+
+            expect(config.get.mock.calls[0][0])
+                .toBe(AUTH_SALT_ROUNDS_PROPERTY);
+            expect(userVerificationService.comparePassword.mock.calls[0][0])
+                .toBe(user.id);
+            expect(userVerificationService.comparePassword.mock.calls[0][1])
+                .toBe(UserFactory.DEFAULT_PASSWORD);
+            expect(userRepository.findOne.mock.calls[0][0])
+                .toBe(user.id);
+            expect(userRepository.save.mock.calls[0][0])
+                .toBe(user);
+        });
+    });
+
     describe('#findUser()', () => {
         it('when user is not exist should return not found error', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(null));
@@ -194,6 +321,8 @@ describe('UserService', () => {
 
             expect(findUserResult.is_err()).toBe(true);
             expect(findUserResult.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
+
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
         });
 
         it('when user exists should return successful output', async () => {
@@ -203,6 +332,8 @@ describe('UserService', () => {
 
             expect(findUserResult.is_ok()).toBe(true);
             expect(findUserResult.unwrap()).toStrictEqual(findUserOutput);
+
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
         });
     });
 });

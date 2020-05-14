@@ -4,7 +4,7 @@ import { DomainService } from '@core/services';
 import { User } from '../entities/user.entity';
 
 @DomainService()
-export class UserRegistrationService {
+export class UserVerificationService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,

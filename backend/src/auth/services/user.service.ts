@@ -14,7 +14,7 @@ import { FindUserInput } from '../dto/find-user.input';
 import { FindUserOutput } from '../dto/find-user.output';
 
 type CreateUserResult = Promise<Result<CreateUserOutput, ValidationException[]>>;
-type ChangePasswordResult = Promise<Result<void, ValidationException[]>>;
+type ChangePasswordResult = Promise<Result<void, ValidationException[] | EntityNotFoundException>>;
 type FindUserResult = Promise<Result<FindUserOutput, EntityNotFoundException>>;
 
 @ApplicationService()
@@ -72,6 +72,10 @@ export class UserService {
         }
 
         const user = await this.userRepository.findOne(input.userId);
+
+        if (!user) {
+            return Err(new EntityNotFoundException());
+        }
 
         await user.setPassword(input.newPassword, this.config.get(AUTH_SALT_ROUNDS_PROPERTY));
 

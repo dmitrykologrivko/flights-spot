@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
-import { UserRegistrationService } from '../services/user-registration.service';
+import { UserVerificationService } from '../services/user-verification.service';
 
 const USER_ID_PROPERTY = 'userId';
 
@@ -8,7 +8,7 @@ const USER_ID_PROPERTY = 'userId';
 @Injectable()
 export class PasswordMatchConstraint {
     constructor(
-        private readonly userRegistrationService: UserRegistrationService,
+        private readonly userRegistrationService: UserVerificationService,
     ) {}
 
     async validate(password: string, args: ValidationArguments) {
