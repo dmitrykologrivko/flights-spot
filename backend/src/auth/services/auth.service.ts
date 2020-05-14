@@ -14,7 +14,6 @@ type ValidateCredentialsResult = Promise<Result<ValidateCredentialsOutput, Entit
 
 @ApplicationService()
 export class AuthService extends BaseAuthService {
-
     constructor(
         @InjectRepository(User)
         protected readonly userRepository: Repository<User>,

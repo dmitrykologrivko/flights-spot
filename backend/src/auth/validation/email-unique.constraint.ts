@@ -9,8 +9,8 @@ export class EmailUniqueConstraint {
         private readonly userRegistrationService: UserRegistrationService,
     ) {}
 
-    async validate(text: string) {
-        return this.userRegistrationService.isEmailUnique(text);
+    async validate(email: string) {
+        return this.userRegistrationService.isEmailUnique(email);
     }
 
     defaultMessage(args: ValidationArguments) {

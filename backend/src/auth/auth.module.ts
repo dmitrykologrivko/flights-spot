@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { APP_PIPE } from '@nestjs/core';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { DatabaseModule } from '@core/database';
@@ -15,6 +16,7 @@ import { JwtAuthService } from './services/jwt-auth.service';
 import { UserService } from './services/user.service';
 import { UserRegistrationService } from './services/user-registration.service';
 import { JwtAuthController } from './controllers/jwt-auth.controller';
+import { UserController } from './controllers/user.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { IsAuthenticatedGuard } from './guards/is-authenticated.guard';
@@ -23,6 +25,9 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailUniqueConstraint } from './validation/email-unique.constraint';
 import { UsernameUniqueConstraint } from './validation/username-unique.constraint';
+import { PasswordMatchConstraint } from './validation/password-match.constraint';
+import { BindUserInterceptor } from './interceptors/bind-user.interceptor';
+import { BindSelfInterceptor } from './interceptors/bind-self.interceptor';
 import { UsersCommand } from './commands/users.command';
 import authConfig from './auth.config';
 
@@ -55,6 +60,10 @@ const jwtAsyncOptions = {
         JwtModule.registerAsync(jwtAsyncOptions),
     ],
     providers: [
+        {
+            provide: APP_PIPE,
+            useClass: ValidationPipe,
+        },
         UserService,
         UserRegistrationService,
         AuthService,
@@ -67,15 +76,23 @@ const jwtAsyncOptions = {
         JwtStrategy,
         EmailUniqueConstraint,
         UsernameUniqueConstraint,
+        PasswordMatchConstraint,
+        BindUserInterceptor,
+        BindSelfInterceptor,
         UsersCommand,
     ],
-    controllers: [JwtAuthController],
+    controllers: [
+        JwtAuthController,
+        UserController,
+    ],
     exports: [
         DatabaseModule,
         LocalAuthGuard,
         JwtAuthGuard,
         IsAuthenticatedGuard,
         IsAdminGuard,
+        BindUserInterceptor,
+        BindSelfInterceptor,
     ],
 })
 export class AuthModule {}

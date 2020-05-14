@@ -23,7 +23,7 @@ export abstract class BaseAuthService {
 
     protected async findUser(username: string): Promise<Result<User, EntityNotFoundException>> {
         const user = await this.userRepository.findOne({
-            where: {_username: username, _isActive: true},
+            where: { _username: username, _isActive: true },
         });
 
         if (!user) {

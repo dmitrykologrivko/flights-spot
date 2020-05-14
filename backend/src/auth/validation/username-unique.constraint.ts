@@ -9,8 +9,8 @@ export class UsernameUniqueConstraint {
         private readonly userRegistrationService: UserRegistrationService,
     ) {}
 
-    async validate(text: string) {
-        return this.userRegistrationService.isUsernameUnique(text);
+    async validate(username: string) {
+        return this.userRegistrationService.isUsernameUnique(username);
     }
 
     defaultMessage(args: ValidationArguments) {

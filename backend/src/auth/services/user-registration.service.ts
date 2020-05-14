@@ -17,4 +17,21 @@ export class UserRegistrationService {
     async isUsernameUnique(username: string): Promise<boolean> {
         return await this.userRepository.count({ where: { _username: username } }) === 0;
     }
+
+    async comparePassword(idOrUsername: number | string, password: string): Promise<boolean> {
+        let user;
+
+        if (typeof idOrUsername === 'number') {
+            user = await this.userRepository.findOne(idOrUsername);
+        }
+        if (typeof idOrUsername === 'string') {
+            user = await this.userRepository.findOne({ where: { _username: idOrUsername } });
+        }
+
+        if (!user) {
+            return false;
+        }
+
+        return await user.comparePassword(password);
+    }
 }

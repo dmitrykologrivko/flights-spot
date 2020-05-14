@@ -9,10 +9,12 @@ import { AUTH_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
 import { CreateUserInput } from '../dto/create-user.input';
 import { CreateUserOutput } from '../dto/create-user.output';
+import { ChangePasswordInput } from '../dto/change-password.input';
 import { FindUserInput } from '../dto/find-user.input';
 import { FindUserOutput } from '../dto/find-user.output';
 
 type CreateUserResult = Promise<Result<CreateUserOutput, ValidationException[]>>;
+type ChangePasswordResult = Promise<Result<void, ValidationException[] | EntityNotFoundException>>;
 type FindUserResult = Promise<Result<FindUserOutput, EntityNotFoundException>>;
 
 @ApplicationService()
@@ -59,8 +61,29 @@ export class UserService {
     }
 
     /**
+     * Changes user password
+     * @param input change password dto
+     */
+    async changePassword(input: ChangePasswordInput): ChangePasswordResult {
+        const validateResult = await ClassValidator.validate(ChangePasswordInput, input);
+
+        if (validateResult.is_err()) {
+            return validateResult;
+        }
+
+        const user = await this.userRepository.findOne(input.userId);
+
+        await user.setPassword(input.newPassword, this.config.get(AUTH_SALT_ROUNDS_PROPERTY));
+
+        await this.userRepository.save(user);
+
+        return Ok(null);
+    }
+
+    /**
      * Finds user by provided filters
      * @param input find user dto
+     * @return user dto
      */
     async findUser(input: FindUserInput): FindUserResult {
         const user = await this.userRepository.findOne({
