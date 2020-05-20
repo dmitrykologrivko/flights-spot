@@ -6,15 +6,15 @@ import { JwtAuthService } from '../../services/jwt-auth.service';
 import { UserFactory } from '../factories/user.factory';
 
 describe('JwtAuthController', () => {
-    const REQUEST = {
+    let controller: JwtAuthController;
+    let jwtAuthService: MockProxy<JwtAuthService> & JwtAuthService;
+
+    const loginRequest = {
         user: {
             username: UserFactory.DEFAULT_USERNAME,
         },
     };
-    const JWT_LOGIN_OUTPUT = { accessToken: 'qf3fssf54djfsv78' };
-
-    let controller: JwtAuthController;
-    let jwtAuthService: MockProxy<JwtAuthService> & JwtAuthService;
+    const loginResponse = { accessToken: 'qf3fssf54djfsv78' };
 
     beforeEach(() => {
         jwtAuthService = mock<JwtAuthService>();
@@ -26,16 +26,16 @@ describe('JwtAuthController', () => {
             jwtAuthService.login.mockReturnValue(Promise.resolve(Err(new EntityNotFoundException())));
 
             await expect(
-                controller.login(REQUEST),
+                controller.login(loginRequest),
             ).rejects.toBeInstanceOf(EntityNotFoundException);
         });
 
         it('when login successful should return access token', async () => {
-            jwtAuthService.login.mockReturnValue(Promise.resolve(Ok(JWT_LOGIN_OUTPUT)));
+            jwtAuthService.login.mockReturnValue(Promise.resolve(Ok(loginResponse)));
 
-            const result = await controller.login(REQUEST);
+            const result = await controller.login(loginRequest);
 
-            expect(result).toBe(JWT_LOGIN_OUTPUT);
+            expect(result).toBe(loginResponse);
         });
     });
 });

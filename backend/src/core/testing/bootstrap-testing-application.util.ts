@@ -1,4 +1,5 @@
 import { INestApplicationContext } from '@nestjs/common';
+import { ModuleMetadata } from '@nestjs/common/interfaces/modules/module-metadata.interface';
 import { Test, TestingModule } from '@nestjs/testing';
 import { useContainer } from 'class-validator';
 
@@ -9,12 +10,13 @@ export interface TestingBootstrapper {
 
 export interface TestingBootstrapOptions {
     module: any;
-    imports?: any[];
+    testingMetadata?: ModuleMetadata;
 }
 
 export async function bootstrapTestingApplication(options: TestingBootstrapOptions): Promise<TestingBootstrapper> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-        imports: [options.module, ...options.imports || []],
+        imports: [options.module, ...options.testingMetadata?.imports || []],
+        ...options.testingMetadata,
     }).compile();
 
     const app = moduleFixture.createNestApplication();

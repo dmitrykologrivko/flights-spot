@@ -6,7 +6,6 @@ import { ApplicationService } from '@core/services';
 import { ClassTransformer } from '@core/utils';
 import { EntityNotFoundException } from '@core/exceptions';
 import { BaseAuthService } from './base-auth.service';
-import { IncorrectPasswordException } from '../exceptions/incorrect-password.exception';
 import { User } from '../entities/user.entity';
 import { JwtLoginInput } from '../dto/jwt-login.input';
 import { JwtLoginOutput } from '../dto/jwt-login.output';

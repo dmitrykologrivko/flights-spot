@@ -4,13 +4,9 @@ import { bootstrapTestingApplication } from '@core/testing';
 import { User } from '@auth/entities';
 import { UserFactory } from '@auth/test/factories/user.factory';
 import { AppModule } from '@app/app.module';
+import unauthorizedResponse from '../common/responses/unauthorized.response';
 
 describe('JwtAuthController (e2e)', () => {
-    const RESPONSE_UNAUTHORIZED = {
-        statusCode: 401,
-        error: 'Unauthorized',
-    };
-
     let app;
     let userRepository: Repository<User>;
 
@@ -31,14 +27,19 @@ describe('JwtAuthController (e2e)', () => {
     });
 
     describe('/api/auth/login (POST)', () => {
-        it('when user not exist should return 401 error', () => {
+        it('when user not exist should return unauthorized error', () => {
             return request(app.getHttpServer())
                 .post('/api/auth/login')
+                .send({
+                    username: UserFactory.DEFAULT_USERNAME,
+                    password: UserFactory.DEFAULT_PASSWORD,
+                })
+                .set('Accept', 'application/json')
                 .expect(401)
-                .expect(RESPONSE_UNAUTHORIZED);
+                .expect(unauthorizedResponse);
         });
 
-        it('when user is inactive should return 401 error', async () => {
+        it('when user is inactive should return unauthorized error', async () => {
             const user = await UserFactory.makeUser();
             user.deactivateUser();
             await userRepository.save(user);
@@ -51,10 +52,10 @@ describe('JwtAuthController (e2e)', () => {
                 })
                 .set('Accept', 'application/json')
                 .expect(401)
-                .expect(RESPONSE_UNAUTHORIZED);
+                .expect(unauthorizedResponse);
         });
 
-        it('when wrong password is provided should return 401 error', async () => {
+        it('when wrong password is provided should return unauthorized error', async () => {
             const user = await UserFactory.makeUser();
             await userRepository.save(user);
 
@@ -66,7 +67,7 @@ describe('JwtAuthController (e2e)', () => {
                 })
                 .set('Accept', 'application/json')
                 .expect(401)
-                .expect(RESPONSE_UNAUTHORIZED);
+                .expect(unauthorizedResponse);
         });
 
         it('when username and password are correct should return access token', async () => {

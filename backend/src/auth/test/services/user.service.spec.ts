@@ -255,8 +255,7 @@ describe('UserService', () => {
             expect(result.is_err()).toBe(true);
             expect(result.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.comparePassword.mock.calls[0][0]).toBe(null);
-            expect(userVerificationService.comparePassword.mock.calls[0][1]).toBe(null);
+            expect(userVerificationService.comparePassword.mock.calls.length).toBe(0);
         });
 
         it('when current password is wrong should return validation error', async () => {
