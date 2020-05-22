@@ -1,18 +1,19 @@
-import { APP_PIPE } from '@nestjs/core';
-import { Module, ValidationPipe } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { DatabaseModule } from '@core/database';
-import { ConfigModule, PropertyConfigService } from '@core/config';
 import {
-    AUTH_JWT_SECRET_PROPERTY,
-    AUTH_JWT_EXPIRES_IN_PROPERTY,
-} from './constants/auth.properties';
+    ConfigModule,
+    PropertyConfigService,
+    SECRET_KEY_PROPERTY,
+} from '@core/config';
+import { AUTH_JWT_EXPIRES_IN_PROPERTY } from './constants/auth.properties';
 import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
 import { Permission } from './entities/permission.entity';
 import { AuthService } from './services/auth.service';
 import { JwtAuthService } from './services/jwt-auth.service';
+import { UserPasswordService } from './services/user-password.service';
 import { UserService } from './services/user.service';
 import { UserVerificationService } from './services/user-verification.service';
 import { JwtAuthController } from './controllers/jwt-auth.controller';
@@ -36,7 +37,7 @@ const jwtAsyncOptions = {
     useFactory: (config: PropertyConfigService) => {
         const moduleOptions: JwtModuleOptions = {};
 
-        const secret = config.get(AUTH_JWT_SECRET_PROPERTY);
+        const secret = config.get(SECRET_KEY_PROPERTY);
         const expiresIn = config.get(AUTH_JWT_EXPIRES_IN_PROPERTY);
 
         if (secret) {
@@ -60,12 +61,9 @@ const jwtAsyncOptions = {
         JwtModule.registerAsync(jwtAsyncOptions),
     ],
     providers: [
-        {
-            provide: APP_PIPE,
-            useClass: ValidationPipe,
-        },
         UserService,
         UserVerificationService,
+        UserPasswordService,
         AuthService,
         JwtAuthService,
         LocalAuthGuard,

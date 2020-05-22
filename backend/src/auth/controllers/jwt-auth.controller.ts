@@ -1,8 +1,15 @@
-import { Request, Post, UseGuards } from '@nestjs/common';
+import {
+    Request,
+    Post,
+    UseGuards,
+    UsePipes,
+    ValidationPipe,
+} from '@nestjs/common';
 import { ApiController } from '@core/controllers';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { JwtAuthService } from '../services/jwt-auth.service';
 
+@UsePipes(ValidationPipe)
 @ApiController('auth')
 export class JwtAuthController {
     constructor(
