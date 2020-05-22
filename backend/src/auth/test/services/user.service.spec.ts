@@ -4,7 +4,7 @@ import { PropertyConfigService } from '@core/config';
 import { ValidationException, EntityNotFoundException } from '@core/exceptions';
 import { ClassTransformer } from '@core/utils';
 import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing';
-import { AUTH_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
+import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
 import { UserService } from '../../services/user.service';
 import { UserVerificationService } from '../../services/user-verification.service';
 import { UsernameUniqueConstraint } from '../../validation/username-unique.constraint';
@@ -300,7 +300,7 @@ describe('UserService', () => {
             expect(await user.comparePassword(changePasswordInput.newPassword)).toBeTruthy();
 
             expect(config.get.mock.calls[0][0])
-                .toBe(AUTH_SALT_ROUNDS_PROPERTY);
+                .toBe(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY);
             expect(userVerificationService.comparePassword.mock.calls[0][0])
                 .toBe(user.id);
             expect(userVerificationService.comparePassword.mock.calls[0][1])

@@ -5,7 +5,7 @@ import { PropertyConfigService } from '@core/config';
 import { ApplicationService } from '@core/services';
 import { ClassTransformer, ClassValidator } from '@core/utils';
 import { EntityNotFoundException, ValidationException } from '@core/exceptions';
-import { AUTH_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
+import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
 import { CreateUserInput } from '../dto/create-user.input';
 import { CreateUserOutput } from '../dto/create-user.output';
@@ -46,7 +46,7 @@ export class UserService {
             input.isActive,
             input.isAdmin,
             input.isSuperuser,
-            this.config.get(AUTH_SALT_ROUNDS_PROPERTY),
+            this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY),
         );
 
         if (createUserResult.is_err()) {
@@ -77,7 +77,7 @@ export class UserService {
             return Err(new EntityNotFoundException());
         }
 
-        await user.setPassword(input.newPassword, this.config.get(AUTH_SALT_ROUNDS_PROPERTY));
+        await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
 
         await this.userRepository.save(user);
 

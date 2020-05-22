@@ -10,7 +10,7 @@ import { ClassValidator } from '@core/utils';
 import { EntityNotFoundException, ValidationException } from '@core/exceptions';
 import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';
 import {
-    AUTH_SALT_ROUNDS_PROPERTY,
+    AUTH_PASSWORD_SALT_ROUNDS_PROPERTY,
     AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY,
 } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
@@ -83,7 +83,7 @@ export class UserPasswordService {
             return Err(new ResetPasswordTokenInvalidException());
         }
 
-        await user.setPassword(input.newPassword, this.config.get(AUTH_SALT_ROUNDS_PROPERTY));
+        await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
         await this.userRepository.save(user);
 
         Logger.log(`Password has been recovered for ${user.username}`);
