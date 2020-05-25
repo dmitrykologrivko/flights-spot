@@ -1,26 +1,15 @@
 import * as crypto from 'crypto';
 import { Repository } from 'typeorm';
-import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Result, Ok, Err } from '@usefultools/monads';
 import { JwtService } from '@nestjs/jwt';
+import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
-import { ApplicationService } from '@core/services';
-import { ClassValidator } from '@core/utils';
-import { EntityNotFoundException, ValidationException } from '@core/exceptions';
-import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';
-import {
-    AUTH_PASSWORD_SALT_ROUNDS_PROPERTY,
-    AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY,
-} from '../constants/auth.properties';
+import { DomainService } from '@core/services';
+import { AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
-import { ForgotPasswordInput } from '../dto/forgot-password.input';
-import { ResetPasswordInput } from '../dto/reset-password.input';
+import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';
 
-type ForgotPasswordResult = Promise<Result<void, EntityNotFoundException | ValidationException[]>>;
-type ResetPasswordResult = Promise<Result<void, ResetPasswordTokenInvalidException | EntityNotFoundException | ValidationException[]>>;
-
-@ApplicationService()
+@DomainService()
 export class UserPasswordService {
     constructor(
         @InjectRepository(User)
@@ -29,69 +18,58 @@ export class UserPasswordService {
         private readonly config: PropertyConfigService,
     ) {}
 
-    async forgotPassword(input: ForgotPasswordInput): ForgotPasswordResult {
-        const validateResult = await ClassValidator.validate(ForgotPasswordInput, input);
+    async comparePassword(idOrUsername: number | string, password: string): Promise<boolean> {
+        let user;
 
-        if (validateResult.is_err()) {
-            return Err(validateResult.unwrap_err());
+        if (typeof idOrUsername === 'number') {
+            user = await this.userRepository.findOne(idOrUsername);
         }
-
-        const user = await this.userRepository.findOne({
-            where: { _email: input.email, _isActive: true },
-        });
+        if (typeof idOrUsername === 'string') {
+            user = await this.userRepository.findOne({ where: { _username: idOrUsername } });
+        }
 
         if (!user) {
-            return Err(new EntityNotFoundException());
+            return false;
         }
 
-        const payload = { sub: user.id, key: this.createTokenKey(user) };
-        const token = await this.jwtService.signAsync(
-            payload,
-            { expiresIn: this.config.get(AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY) },
-        );
-
-        Logger.debug(`(DEBUG) Reset token: ${token}`);
-        Logger.log(`Recover password email has been sent for ${user.username}`);
-
-        return Ok(null);
+        return await user.comparePassword(password);
     }
 
-    async resetPassword(input: ResetPasswordInput): ResetPasswordResult {
-        const validateResult = await ClassValidator.validate(ResetPasswordInput, input);
+    async isEmailActive(email: string): Promise<boolean> {
+        return await this.userRepository.findOne({ where: { _email: email, _isActive: true } }) !== undefined;
+    }
 
-        if (validateResult.is_err()) {
-            return Err(validateResult.unwrap_err());
-        }
+    async isResetPasswordTokenValid(token: string): Promise<boolean> {
+        const result = await this.verifyResetPasswordToken(token);
+        return result.is_ok();
+    }
 
-        let payload;
+    async createResetPasswordToken(user: User) {
+        return await this.jwtService.signAsync(
+            { sub: user.id, key: this.getResetPasswordTokenKey(user) },
+            { expiresIn: this.config.get(AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY) },
+        );
+    }
 
+    async verifyResetPasswordToken(token: string): Promise<Result<User, ResetPasswordTokenInvalidException>> {
         try {
-            payload = await this.jwtService.verifyAsync(input.resetPasswordToken);
+            const payload = await this.jwtService.verifyAsync(token);
+
+            const user = await this.userRepository.findOne({
+                where: { id: payload.sub, _isActive: true },
+            });
+
+            if (!user || this.getResetPasswordTokenKey(user) !== payload.key) {
+                return Err(new ResetPasswordTokenInvalidException());
+            }
+
+            return Ok(user);
         } catch (e) {
             return Err(new ResetPasswordTokenInvalidException());
         }
-
-        const user = await this.userRepository.findOne({
-            where: { id: payload.sub, _isActive: true },
-        });
-
-        if (!user) {
-            return Err(new EntityNotFoundException());
-        }
-
-        if (this.createTokenKey(user) !== payload.key) {
-            return Err(new ResetPasswordTokenInvalidException());
-        }
-
-        await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
-        await this.userRepository.save(user);
-
-        Logger.log(`Password has been recovered for ${user.username}`);
-
-        return Ok(null);
     }
 
-    private createTokenKey(user: User) {
+    private getResetPasswordTokenKey(user: User) {
         /*
          * The user's password hashed by bcrypt that guarantee password has
          * new hash value every time even if a password is the same.

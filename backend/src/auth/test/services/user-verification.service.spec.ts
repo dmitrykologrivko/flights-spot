@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { User } from '../../entities/user.entity';
-import { UserVerificationService } from '../../services/user-verification.service';
+import { UserRegistrationService } from '../../services/user-registration.service';
 import { UserFactory } from '../factories/user.factory';
 
 describe('UserVerificationService', () => {
@@ -12,14 +12,14 @@ describe('UserVerificationService', () => {
     const EMAIL_QUERY = { where: { _email: EMAIL } };
     const USERNAME_QUERY = { where: { _username: USERNAME } };
 
-    let service: UserVerificationService;
+    let service: UserRegistrationService;
     let userRepository: MockProxy<Repository<User>>;
 
     let user: User;
 
     beforeEach(async () => {
         userRepository = mock<Repository<User>>();
-        service = new UserVerificationService(userRepository);
+        service = new UserRegistrationService(userRepository);
 
         user = await UserFactory.makeUser();
     });

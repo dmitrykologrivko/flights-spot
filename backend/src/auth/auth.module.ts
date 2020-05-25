@@ -15,7 +15,7 @@ import { AuthService } from './services/auth.service';
 import { JwtAuthService } from './services/jwt-auth.service';
 import { UserPasswordService } from './services/user-password.service';
 import { UserService } from './services/user.service';
-import { UserVerificationService } from './services/user-verification.service';
+import { UserRegistrationService } from './services/user-registration.service';
 import { JwtAuthController } from './controllers/jwt-auth.controller';
 import { UserController } from './controllers/user.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -25,8 +25,10 @@ import { IsAdminGuard } from './guards/is-admin.guard';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailUniqueConstraint } from './validation/email-unique.constraint';
+import { EmailActiveConstraint } from './validation/email-active.constraint';
 import { UsernameUniqueConstraint } from './validation/username-unique.constraint';
 import { PasswordMatchConstraint } from './validation/password-match.constraint';
+import { ResetPasswordTokenValidConstraint } from './validation/reset-password-token-valid.constraint';
 import { BindUserInterceptor } from './interceptors/bind-user.interceptor';
 import { BindSelfInterceptor } from './interceptors/bind-self.interceptor';
 import { UsersCommand } from './commands/users.command';
@@ -62,7 +64,7 @@ const jwtAsyncOptions = {
     ],
     providers: [
         UserService,
-        UserVerificationService,
+        UserRegistrationService,
         UserPasswordService,
         AuthService,
         JwtAuthService,
@@ -73,8 +75,10 @@ const jwtAsyncOptions = {
         LocalStrategy,
         JwtStrategy,
         EmailUniqueConstraint,
+        EmailActiveConstraint,
         UsernameUniqueConstraint,
         PasswordMatchConstraint,
+        ResetPasswordTokenValidConstraint,
         BindUserInterceptor,
         BindSelfInterceptor,
         UsersCommand,

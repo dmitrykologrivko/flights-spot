@@ -6,7 +6,7 @@ import { ClassTransformer } from '@core/utils';
 import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
 import { UserService } from '../../services/user.service';
-import { UserVerificationService } from '../../services/user-verification.service';
+import { UserRegistrationService } from '../../services/user-registration.service';
 import { UsernameUniqueConstraint } from '../../validation/username-unique.constraint';
 import { EmailUniqueConstraint } from '../../validation/email-unique.constraint';
 import { PasswordMatchConstraint } from '../../validation/password-match.constraint';
@@ -22,7 +22,7 @@ describe('UserService', () => {
     const USERNAME_QUERY = { where: { _username: UserFactory.DEFAULT_USERNAME } };
 
     let container: SimpleIocContainer;
-    let userVerificationService: MockProxy<UserVerificationService> & UserVerificationService;
+    let userVerificationService: MockProxy<UserRegistrationService> & UserRegistrationService;
     let userRepository: MockProxy<Repository<User>>;
     let config: MockProxy<PropertyConfigService> & PropertyConfigService;
     let usernameUniqueConstraint: UsernameUniqueConstraint;
@@ -40,7 +40,7 @@ describe('UserService', () => {
     beforeEach(async () => {
         container = createClassValidatorContainer();
 
-        userVerificationService = mock<UserVerificationService>();
+        userVerificationService = mock<UserRegistrationService>();
         userRepository = mock<Repository<User>>();
         config = mock<PropertyConfigService>();
         usernameUniqueConstraint = new UsernameUniqueConstraint(userVerificationService);
@@ -49,7 +49,7 @@ describe('UserService', () => {
 
         service = new UserService(userRepository, config);
 
-        container.register(UserVerificationService, userVerificationService, true);
+        container.register(UserRegistrationService, userVerificationService, true);
         container.register(UsernameUniqueConstraint, usernameUniqueConstraint);
         container.register(EmailUniqueConstraint, emailUniqueConstraint);
         container.register(PasswordMatchConstraint, passwordMatchConstraint);
