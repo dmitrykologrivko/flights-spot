@@ -8,7 +8,6 @@ import { ClassTransformer, ClassValidator } from '@core/utils';
 import { ValidationContainerException } from '@core/exceptions';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { UserNotFoundException } from '../exceptions/user-not-found-exception';
-import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';
 import { User } from '../entities/user.entity';
 import { UserPasswordService } from './user-password.service';
 import { CreateUserInput } from '../dto/create-user.input';
@@ -20,9 +19,9 @@ import { FindUserInput } from '../dto/find-user.input';
 import { FindUserOutput } from '../dto/find-user.output';
 
 type CreateUserResult = Promise<Result<CreateUserOutput, ValidationContainerException>>;
-type ChangePasswordResult = Promise<Result<void, ValidationContainerException | UserNotFoundException>>;
-type ForgotPasswordResult = Promise<Result<void, ValidationContainerException | UserNotFoundException>>;
-type ResetPasswordResult = Promise<Result<void, ValidationContainerException | ResetPasswordTokenInvalidException | UserNotFoundException>>;
+type ChangePasswordResult = Promise<Result<void, ValidationContainerException>>;
+type ForgotPasswordResult = Promise<Result<void, ValidationContainerException>>;
+type ResetPasswordResult = Promise<Result<void, ValidationContainerException>>;
 type FindUserResult = Promise<Result<FindUserOutput, UserNotFoundException>>;
 
 @ApplicationService()
@@ -58,10 +57,6 @@ export class UserService {
             this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY),
         );
 
-        if (createUserResult.is_err()) {
-            return createUserResult;
-        }
-
         const user = await this.userRepository.save(createUserResult.unwrap());
 
         const output = ClassTransformer.toClassObject(CreateUserOutput, user);
@@ -81,13 +76,7 @@ export class UserService {
         }
 
         const user = await this.userRepository.findOne(input.userId);
-
-        if (!user) {
-            return Err(new UserNotFoundException());
-        }
-
         await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
-
         await this.userRepository.save(user);
 
         return Ok(null);
@@ -107,10 +96,6 @@ export class UserService {
         const user = await this.userRepository.findOne({
             where: { _email: input.email, _isActive: true },
         });
-
-        if (!user) {
-            return Err(new UserNotFoundException());
-        }
 
         const token = await this.passwordService.createResetPasswordToken(user);
 
@@ -133,12 +118,7 @@ export class UserService {
 
         const verifyTokenResult = await this.passwordService.verifyResetPasswordToken(input.resetPasswordToken);
 
-        if (verifyTokenResult.is_err()) {
-            return Err(verifyTokenResult.unwrap_err());
-        }
-
         const user = verifyTokenResult.unwrap();
-
         await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
         await this.userRepository.save(user);
 
