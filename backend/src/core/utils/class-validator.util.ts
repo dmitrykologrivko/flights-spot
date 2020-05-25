@@ -4,6 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { ValidationException } from '../exceptions/validation.exception';
+import { ValidationContainerException } from '../exceptions/validation-container.exception';
 
 /**
  * Class validation util
@@ -23,7 +24,7 @@ export class ClassValidator {
         cls: ClassType<T>,
         object: T,
         validationOptions?: ValidationOptions,
-    ): Promise<Result<void, ValidationException[]>> {
+    ): Promise<Result<void, ValidationContainerException>> {
         let validatableObject = object;
 
         if (!(validatableObject instanceof cls)) {
@@ -33,7 +34,9 @@ export class ClassValidator {
         const errors = await validate(validatableObject, validationOptions);
 
         if (errors !== undefined && errors.length !== 0) {
-            return Err(ClassValidator.toValidationExceptions(errors));
+            return Err(
+                new ValidationContainerException(ClassValidator.toValidationExceptions(errors)),
+            );
         }
 
         return Ok(null);
@@ -50,7 +53,7 @@ export class ClassValidator {
         cls: ClassType<T>,
         object: T,
         validationOptions?: ValidationOptions,
-    ): Promise<Result<void, ValidationException[]>> {
+    ): Promise<Result<void, ValidationContainerException>> {
         return ClassValidator.validate(cls, object, validationOptions);
     }
 

@@ -4,7 +4,7 @@ import { ValidationException } from './validation.exception';
  * Validation result exception
  * Indicates array of validation exceptions
  */
-export class ValidationResultException {
+export class ValidationContainerException {
     constructor(
         public readonly validationExceptions: ValidationException[],
     ) {}

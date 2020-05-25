@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcrypt';
 import { Column, JoinTable, ManyToMany } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
-import { Validate, ValidationResult, SingleValidationResult } from '@core/utils';
-import { ValidationException } from '@core/exceptions';
+import { Validate, ValidationResult, ValidationContainerResult } from '@core/utils';
+import { ValidationException, ValidationContainerException } from '@core/exceptions';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 import { Group } from './group.entity';
@@ -118,7 +118,7 @@ export class User extends BaseEntity {
         isAdmin: boolean = false,
         isSuperuser: boolean = false,
         saltRounds: number = 10,
-    ): Promise<Result<User, ValidationException[]>> {
+    ): Promise<Result<User, ValidationContainerException>> {
         const validateResult = Validate.withResults([
             User.validateUsername(username),
             User.validatePassword(password),
@@ -218,7 +218,7 @@ export class User extends BaseEntity {
      * @param lastName new last name
      * @return changing name result
      */
-    changeName(firstName: string, lastName: string): SingleValidationResult {
+    changeName(firstName: string, lastName: string): ValidationContainerResult {
         const validateResult = Validate.withResults([
             User.validateFirstName(firstName),
             User.validateLastName(lastName),

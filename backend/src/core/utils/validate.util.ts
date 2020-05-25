@@ -1,9 +1,9 @@
 import { Result, Ok, Err } from '@usefultools/monads';
 import { Validator } from 'class-validator';
-import { ValidationException } from '../exceptions';
+import { ValidationException, ValidationContainerException } from '../exceptions';
 
 export type ValidationResult = Result<void, ValidationException>;
-export type SingleValidationResult = Result<void, ValidationException[]>;
+export type ValidationContainerResult = Result<void, ValidationContainerException>;
 
 /**
  * Validation util for single properties
@@ -43,11 +43,13 @@ export class Validate {
      * @param results array of separated validation results
      * @return single validation result
      */
-    static withResults(results: ValidationResult[]): SingleValidationResult {
+    static withResults(results: ValidationResult[]): ValidationContainerResult {
         const errorResults = results.filter(result => result.is_err());
 
         if (errorResults.length > 0) {
-            return Err(errorResults.map(result => result.unwrap_err()));
+            return Err(
+                new ValidationContainerException(errorResults.map(result => result.unwrap_err())),
+            );
         }
 
         return Ok(null);

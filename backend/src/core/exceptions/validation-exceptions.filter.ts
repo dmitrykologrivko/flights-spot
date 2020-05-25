@@ -2,9 +2,9 @@ import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
 import { Response } from 'express';
 import { ValidationException } from './validation.exception';
 import { NonFieldValidationException } from './non-field-validation.exception';
-import { ValidationResultException } from './validation-result.exception';
+import { ValidationContainerException } from './validation-container.exception';
 
-@Catch(ValidationException, NonFieldValidationException, ValidationResultException)
+@Catch(ValidationException, NonFieldValidationException, ValidationContainerException)
 export class ValidationExceptionsFilter implements ExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
@@ -17,7 +17,7 @@ export class ValidationExceptionsFilter implements ExceptionFilter {
             message.push(exception);
         }
 
-        if (exception instanceof ValidationResultException) {
+        if (exception instanceof ValidationContainerException) {
             message = message.concat(exception.validationExceptions);
         }
 

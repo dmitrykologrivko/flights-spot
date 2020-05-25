@@ -5,7 +5,7 @@ import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
 import { ApplicationService } from '@core/services';
 import { ClassTransformer, ClassValidator } from '@core/utils';
-import { ValidationException } from '@core/exceptions';
+import { ValidationContainerException } from '@core/exceptions';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { UserNotFoundException } from '../exceptions/user-not-found-exception';
 import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';
@@ -19,10 +19,10 @@ import { ResetPasswordInput } from '../dto/reset-password.input';
 import { FindUserInput } from '../dto/find-user.input';
 import { FindUserOutput } from '../dto/find-user.output';
 
-type CreateUserResult = Promise<Result<CreateUserOutput, ValidationException[]>>;
-type ChangePasswordResult = Promise<Result<void, ValidationException[] | UserNotFoundException>>;
-type ForgotPasswordResult = Promise<Result<void, ValidationException[] | UserNotFoundException>>;
-type ResetPasswordResult = Promise<Result<void, ValidationException[] | ResetPasswordTokenInvalidException | UserNotFoundException>>;
+type CreateUserResult = Promise<Result<CreateUserOutput, ValidationContainerException>>;
+type ChangePasswordResult = Promise<Result<void, ValidationContainerException | UserNotFoundException>>;
+type ForgotPasswordResult = Promise<Result<void, ValidationContainerException | UserNotFoundException>>;
+type ResetPasswordResult = Promise<Result<void, ValidationContainerException | ResetPasswordTokenInvalidException | UserNotFoundException>>;
 type FindUserResult = Promise<Result<FindUserOutput, UserNotFoundException>>;
 
 @ApplicationService()

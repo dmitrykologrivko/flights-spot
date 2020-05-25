@@ -1,10 +1,11 @@
 import { Repository } from 'typeorm';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
-import { ValidationException, EntityNotFoundException } from '@core/exceptions';
+import { ValidationException, ValidationContainerException } from '@core/exceptions';
 import { ClassTransformer } from '@core/utils';
 import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
+import { UserNotFoundException } from '../../exceptions/user-not-found-exception';
 import { UserService } from '../../services/user.service';
 import { UserRegistrationService } from '../../services/user-registration.service';
 import { UserPasswordService } from '../../services/user-password.service';
@@ -87,7 +88,7 @@ describe('UserService', () => {
 
     describe('#createUser()', () => {
         it('when input is not valid should return validation errors', async () => {
-            const errors: ValidationException[] = [
+            const errors: ValidationContainerException = new ValidationContainerException([
                 new ValidationException(
                     'username',
                     null,
@@ -129,7 +130,7 @@ describe('UserService', () => {
                         maxLength: 'lastName must be shorter than or equal to 150 characters',
                     },
                 ),
-            ];
+            ]);
 
             userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
             userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
@@ -150,7 +151,7 @@ describe('UserService', () => {
         });
 
         it('when email already exists should return validation error', async () => {
-            const errors: ValidationException[] = [
+            const errors: ValidationContainerException = new ValidationContainerException([
                 new ValidationException(
                     'email',
                     user.email,
@@ -158,7 +159,7 @@ describe('UserService', () => {
                         emailUnique: 'User with this email already exists',
                     },
                 ),
-            ];
+            ]);
 
             userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(false));
             userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
@@ -173,7 +174,7 @@ describe('UserService', () => {
         });
 
         it('when username already exists should return validation error', async () => {
-            const errors: ValidationException[] = [
+            const errors: ValidationContainerException = new ValidationContainerException([
                 new ValidationException(
                     'username',
                     user.username,
@@ -181,7 +182,7 @@ describe('UserService', () => {
                         usernameUnique: 'User with this username already exists',
                     },
                 ),
-            ];
+            ]);
 
             userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
             userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(false));
@@ -222,7 +223,7 @@ describe('UserService', () => {
 
     describe('#changePassword()', () => {
         it('when input is not valid should return validation errors', async () => {
-            const errors: ValidationException[] = [
+            const errors: ValidationContainerException = new ValidationContainerException([
                 new ValidationException(
                     'userId',
                     null,
@@ -249,7 +250,7 @@ describe('UserService', () => {
                         maxLength: 'newPassword must be shorter than or equal to 128 characters',
                     },
                 ),
-            ];
+            ]);
 
             userPasswordService.comparePassword.mockReturnValue(Promise.resolve(false));
 
@@ -267,7 +268,7 @@ describe('UserService', () => {
 
         it('when current password is wrong should return validation error', async () => {
             const wrongPassword = 'wrong-password';
-            const errors: ValidationException[] = [
+            const errors: ValidationContainerException = new ValidationContainerException([
                 new ValidationException(
                     'currentPassword',
                     wrongPassword,
@@ -275,7 +276,7 @@ describe('UserService', () => {
                         passwordMatch: 'Does not match with current user password',
                     },
                 ),
-            ];
+            ]);
 
             userPasswordService.comparePassword.mockReturnValue(Promise.resolve(false));
 
@@ -326,7 +327,7 @@ describe('UserService', () => {
             const findUserResult = await service.findUser(findUserInput);
 
             expect(findUserResult.is_err()).toBe(true);
-            expect(findUserResult.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
+            expect(findUserResult.unwrap_err()).toBeInstanceOf(UserNotFoundException);
 
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
         });

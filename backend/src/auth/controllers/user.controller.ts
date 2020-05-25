@@ -6,9 +6,11 @@ import {
     UseGuards,
     UseInterceptors,
     UsePipes,
+    UseFilters,
     ValidationPipe,
 } from '@nestjs/common';
 import { ApiController } from '@core/controllers';
+import { ValidationExceptionsFilter } from '@core/exceptions';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserService } from '../services/user.service';
 import { ChangePasswordInput } from '../dto/change-password.input';
@@ -17,6 +19,7 @@ import { ResetPasswordInput } from '../dto/reset-password.input';
 import { BindSelfInterceptor } from '../interceptors/bind-self.interceptor';
 
 @UsePipes(ValidationPipe)
+@UseFilters(ValidationExceptionsFilter)
 @ApiController('users')
 export class UserController {
     constructor(
