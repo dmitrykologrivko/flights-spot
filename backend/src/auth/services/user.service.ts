@@ -94,7 +94,7 @@ export class UserService {
     }
 
     /**
-     *
+     * Generates reset password token and sends to user email
      * @param input
      */
     async forgotPassword(input: ForgotPasswordInput): ForgotPasswordResult {
@@ -121,7 +121,7 @@ export class UserService {
     }
 
     /**
-     *
+     * Resets user password by reset password token
      * @param input
      */
     async resetPassword(input: ResetPasswordInput): ResetPasswordResult {
