@@ -7,6 +7,8 @@ import { User } from '../../entities/user.entity';
 import { UserFactory } from '../factories/user.factory';
 
 describe('UserController', () => {
+    const REQUEST = { ip: '0.0.0.0' };
+
     let controller: UserController;
     let userService: MockProxy<UserService> & UserService;
 
@@ -32,14 +34,14 @@ describe('UserController', () => {
             userService.changePassword.mockReturnValue(Promise.resolve(Err(new EntityNotFoundException())));
 
             await expect(
-                controller.changePassword(changePasswordRequest),
+                controller.changePassword(REQUEST, changePasswordRequest),
             ).rejects.toBeInstanceOf(EntityNotFoundException);
         });
 
         it('when change password successful should return successful response', async () => {
             userService.changePassword.mockReturnValue(Promise.resolve(Ok(null)));
 
-            const result = await controller.changePassword(changePasswordRequest);
+            const result = await controller.changePassword(REQUEST, changePasswordRequest);
 
             expect(result).toBe(null);
         });

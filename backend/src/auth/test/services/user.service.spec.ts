@@ -7,9 +7,11 @@ import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';
 import { UserService } from '../../services/user.service';
 import { UserRegistrationService } from '../../services/user-registration.service';
+import { UserPasswordService } from '../../services/user-password.service';
 import { UsernameUniqueConstraint } from '../../validation/username-unique.constraint';
 import { EmailUniqueConstraint } from '../../validation/email-unique.constraint';
 import { PasswordMatchConstraint } from '../../validation/password-match.constraint';
+import { ResetPasswordTokenValidConstraint } from '../../validation/reset-password-token-valid.constraint';
 import { User } from '../../entities/user.entity';
 import { CreateUserInput } from '../../dto/create-user.input';
 import { CreateUserOutput } from '../../dto/create-user.output';
@@ -22,12 +24,14 @@ describe('UserService', () => {
     const USERNAME_QUERY = { where: { _username: UserFactory.DEFAULT_USERNAME } };
 
     let container: SimpleIocContainer;
-    let userVerificationService: MockProxy<UserRegistrationService> & UserRegistrationService;
+    let userRegistrationService: MockProxy<UserRegistrationService> & UserRegistrationService;
+    let userPasswordService: MockProxy<UserPasswordService> & UserPasswordService;
     let userRepository: MockProxy<Repository<User>>;
     let config: MockProxy<PropertyConfigService> & PropertyConfigService;
     let usernameUniqueConstraint: UsernameUniqueConstraint;
     let emailUniqueConstraint: EmailUniqueConstraint;
     let passwordMatchConstraint: PasswordMatchConstraint;
+    let resetPasswordTokenValidConstraint: ResetPasswordTokenValidConstraint;
     let service: UserService;
 
     let user: User;
@@ -40,19 +44,22 @@ describe('UserService', () => {
     beforeEach(async () => {
         container = createClassValidatorContainer();
 
-        userVerificationService = mock<UserRegistrationService>();
+        userRegistrationService = mock<UserRegistrationService>();
+        userPasswordService = mock<UserPasswordService>();
         userRepository = mock<Repository<User>>();
         config = mock<PropertyConfigService>();
-        usernameUniqueConstraint = new UsernameUniqueConstraint(userVerificationService);
-        emailUniqueConstraint = new EmailUniqueConstraint(userVerificationService);
-        passwordMatchConstraint = new PasswordMatchConstraint(userVerificationService);
+        usernameUniqueConstraint = new UsernameUniqueConstraint(userRegistrationService);
+        emailUniqueConstraint = new EmailUniqueConstraint(userRegistrationService);
+        passwordMatchConstraint = new PasswordMatchConstraint(userPasswordService);
+        resetPasswordTokenValidConstraint = new ResetPasswordTokenValidConstraint(userPasswordService);
 
-        service = new UserService(userRepository, config);
+        service = new UserService(userRepository, userPasswordService, config);
 
-        container.register(UserRegistrationService, userVerificationService, true);
+        container.register(UserRegistrationService, userRegistrationService, true);
         container.register(UsernameUniqueConstraint, usernameUniqueConstraint);
         container.register(EmailUniqueConstraint, emailUniqueConstraint);
         container.register(PasswordMatchConstraint, passwordMatchConstraint);
+        container.register(ResetPasswordTokenValidConstraint, resetPasswordTokenValidConstraint);
 
         user = await UserFactory.makeUser();
 
@@ -124,8 +131,8 @@ describe('UserService', () => {
                 ),
             ];
 
-            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
 
             const createUserResult = await service.createUser({
                 email: null,
@@ -138,8 +145,8 @@ describe('UserService', () => {
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(null);
-            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(null);
+            expect(userRegistrationService.isEmailUnique.mock.calls[0][0]).toBe(null);
+            expect(userRegistrationService.isUsernameUnique.mock.calls[0][0]).toBe(null);
         });
 
         it('when email already exists should return validation error', async () => {
@@ -153,16 +160,16 @@ describe('UserService', () => {
                 ),
             ];
 
-            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(false));
-            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(false));
+            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
 
             const createUserResult = await service.createUser(createUserInput);
 
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
-            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
+            expect(userRegistrationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userRegistrationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
         });
 
         it('when username already exists should return validation error', async () => {
@@ -176,21 +183,21 @@ describe('UserService', () => {
                 ),
             ];
 
-            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(false));
+            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(false));
 
             const createUserResult = await service.createUser(createUserInput);
 
             expect(createUserResult.is_err()).toBe(true);
             expect(createUserResult.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
-            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
+            expect(userRegistrationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userRegistrationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
         });
 
         it('when input is valid should return successful output', async () => {
-            userVerificationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
-            userVerificationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isEmailUnique.mockReturnValue(Promise.resolve(true));
+            userRegistrationService.isUsernameUnique.mockReturnValue(Promise.resolve(true));
             userRepository.save.mockReturnValue(Promise.resolve(user));
 
             const createUserResult = await service.createUser(createUserInput);
@@ -198,8 +205,8 @@ describe('UserService', () => {
             expect(createUserResult.is_ok()).toBe(true);
             expect(createUserResult.unwrap()).toStrictEqual(createUserOutput);
 
-            expect(userVerificationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
-            expect(userVerificationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
+            expect(userRegistrationService.isEmailUnique.mock.calls[0][0]).toBe(user.email);
+            expect(userRegistrationService.isUsernameUnique.mock.calls[0][0]).toBe(user.username);
 
             const callArg = userRepository.save.mock.calls[0][0];
 
@@ -244,7 +251,7 @@ describe('UserService', () => {
                 ),
             ];
 
-            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(false));
+            userPasswordService.comparePassword.mockReturnValue(Promise.resolve(false));
 
             const result = await service.changePassword({
                 userId: null,
@@ -255,7 +262,7 @@ describe('UserService', () => {
             expect(result.is_err()).toBe(true);
             expect(result.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.comparePassword.mock.calls.length).toBe(0);
+            expect(userPasswordService.comparePassword.mock.calls.length).toBe(0);
         });
 
         it('when current password is wrong should return validation error', async () => {
@@ -270,7 +277,7 @@ describe('UserService', () => {
                 ),
             ];
 
-            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(false));
+            userPasswordService.comparePassword.mockReturnValue(Promise.resolve(false));
 
             const result = await service.changePassword({
                 ...changePasswordInput,
@@ -280,13 +287,13 @@ describe('UserService', () => {
             expect(result.is_err()).toBe(true);
             expect(result.unwrap_err()).toStrictEqual(errors);
 
-            expect(userVerificationService.comparePassword.mock.calls[0][0]).toBe(user.id);
-            expect(userVerificationService.comparePassword.mock.calls[0][1]).toBe(wrongPassword);
+            expect(userPasswordService.comparePassword.mock.calls[0][0]).toBe(user.id);
+            expect(userPasswordService.comparePassword.mock.calls[0][1]).toBe(wrongPassword);
         });
 
         it('when input is valid should change password', async () => {
             config.get.mockReturnValue(10);
-            userVerificationService.comparePassword.mockReturnValue(Promise.resolve(true));
+            userPasswordService.comparePassword.mockReturnValue(Promise.resolve(true));
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
             userRepository.save.mockReturnValue(Promise.resolve(user));
 
@@ -301,9 +308,9 @@ describe('UserService', () => {
 
             expect(config.get.mock.calls[0][0])
                 .toBe(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY);
-            expect(userVerificationService.comparePassword.mock.calls[0][0])
+            expect(userPasswordService.comparePassword.mock.calls[0][0])
                 .toBe(user.id);
-            expect(userVerificationService.comparePassword.mock.calls[0][1])
+            expect(userPasswordService.comparePassword.mock.calls[0][1])
                 .toBe(UserFactory.DEFAULT_PASSWORD);
             expect(userRepository.findOne.mock.calls[0][0])
                 .toBe(user.id);
