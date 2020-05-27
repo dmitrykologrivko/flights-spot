@@ -76,6 +76,7 @@ export class UsersCommand {
             Logger.log(`Superuser "${username}" has been created`);
         } else {
             const message = createUserResult.unwrap_err()
+                .validationExceptions
                 .map(exception => exception.toString())
                 .join('');
             Logger.error(message);

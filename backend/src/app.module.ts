@@ -10,7 +10,7 @@ import appConfig from './app.config';
       CoreModule.forRoot({
           config: [appConfig],
       }),
-      AuthModule,
+      AuthModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

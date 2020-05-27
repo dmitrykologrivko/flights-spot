@@ -3,7 +3,7 @@ import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 import { Validate } from '@core/utils';
-import { ValidationException } from '@core/exceptions';
+import { ValidationException, ValidationContainerException } from '@core/exceptions';
 
 export const GROUP_NAME_MAX_LENGTH = 150;
 
@@ -30,7 +30,7 @@ export class Group extends BaseEntity {
      * @param name permission name
      * @return group creation result
      */
-    static create(name: string): Result<Group, ValidationException[]> {
+    static create(name: string): Result<Group, ValidationContainerException> {
         const validateResult = Validate.withResults([
             Group.validateName(name),
         ]);

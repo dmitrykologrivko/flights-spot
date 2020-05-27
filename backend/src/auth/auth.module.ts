@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, DynamicModule } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { DatabaseModule } from '@core/database';
@@ -7,6 +7,7 @@ import {
     PropertyConfigService,
     SECRET_KEY_PROPERTY,
 } from '@core/config';
+import { isUndefined } from '@core/utils';
 import { AUTH_JWT_EXPIRES_IN_PROPERTY } from './constants/auth.properties';
 import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
@@ -33,6 +34,11 @@ import { BindUserInterceptor } from './interceptors/bind-user.interceptor';
 import { BindSelfInterceptor } from './interceptors/bind-self.interceptor';
 import { UsersCommand } from './commands/users.command';
 import authConfig from './auth.config';
+
+export interface AuthModuleOptions {
+    enableUsersApi?: boolean;
+    enableAuthApi?: boolean;
+}
 
 const jwtAsyncOptions = {
     imports: [PropertyConfigService],
@@ -83,12 +89,10 @@ const jwtAsyncOptions = {
         BindSelfInterceptor,
         UsersCommand,
     ],
-    controllers: [
-        JwtAuthController,
-        UserController,
-    ],
     exports: [
         DatabaseModule,
+        UserService,
+        JwtAuthService,
         LocalAuthGuard,
         JwtAuthGuard,
         IsAuthenticatedGuard,
@@ -97,4 +101,22 @@ const jwtAsyncOptions = {
         BindSelfInterceptor,
     ],
 })
-export class AuthModule {}
+export class AuthModule {
+
+    static forRoot(options: AuthModuleOptions = {}): DynamicModule {
+        const controllers = [];
+
+        if (isUndefined(options.enableUsersApi) || options.enableUsersApi === true) {
+            controllers.push(UserController);
+        }
+
+        if (isUndefined(options.enableAuthApi) || options.enableAuthApi === true) {
+            controllers.push(JwtAuthController);
+        }
+
+        return {
+            module: AuthModule,
+            controllers,
+        };
+    }
+}
