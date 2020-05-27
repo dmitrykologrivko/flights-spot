@@ -3,8 +3,8 @@ import { TimeStamped } from './time-stamped.interface';
 
 export abstract class BaseValueObject implements TimeStamped {
 
-    @PrimaryGeneratedColumn()
-    _id: number;
+    @PrimaryGeneratedColumn({ name: 'id' })
+    private _id: number;
 
     @CreateDateColumn()
     created: Date;
