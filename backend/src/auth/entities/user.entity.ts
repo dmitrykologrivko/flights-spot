@@ -2,7 +2,7 @@ import * as bcrypt from 'bcrypt';
 import { Column, JoinTable, ManyToMany } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { Validate, ValidationResult, ValidationContainerResult } from '@core/utils';
-import { ValidationException, ValidationContainerException } from '@core/exceptions';
+import { ValidationContainerException } from '@core/exceptions';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 import { Group } from './group.entity';

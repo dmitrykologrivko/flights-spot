@@ -1,5 +1,5 @@
-import { Entity as TypeOrmEntity } from 'typeorm';
+import { Entity as TypeOrmEntity, EntityOptions as TypeOrmEntityOptions } from 'typeorm';
 
-export function ValueObject() {
-    return TypeOrmEntity();
+export function ValueObject(options?: TypeOrmEntityOptions) {
+    return TypeOrmEntity(options);
 }

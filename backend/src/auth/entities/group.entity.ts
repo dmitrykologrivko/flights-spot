@@ -3,7 +3,7 @@ import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
 import { Validate } from '@core/utils';
-import { ValidationException, ValidationContainerException } from '@core/exceptions';
+import { ValidationContainerException } from '@core/exceptions';
 
 export const GROUP_NAME_MAX_LENGTH = 150;
 
