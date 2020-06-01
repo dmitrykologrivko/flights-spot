@@ -10,6 +10,7 @@ import { DEFAULT_CONNECTION_NAME } from './database.constants';
 import { DATABASES_PROPERTY } from './database.properties';
 import { MigrationsCommand } from './migrations.command';
 import { EntityMetadataStorage } from './entity-metadata-storage.service';
+import { EntitySwappableService } from './entity-swappable.service';
 import { EntityOptions, DatabaseConnection } from './database.interfaces';
 import databaseConfig from './database.config';
 
@@ -83,6 +84,7 @@ export class DatabaseModule {
         options: EntityOptions = {},
         connection: DatabaseConnection = DEFAULT_CONNECTION_NAME,
     ): DynamicModule {
+        entities = entities.map(entity => EntitySwappableService.findSwappable(entity) || entity);
         options.entities = entities;
 
         this.addEntityOptions(options);
@@ -97,6 +99,10 @@ export class DatabaseModule {
     static withEntityOptions(options: EntityOptions): DynamicModule {
         this.addEntityOptions(options);
         return { module: DatabaseModule };
+    }
+
+    static swapEntities<E extends Function, S extends E>(...entities: Array<[E, S]>) {
+        EntitySwappableService.swapEntities(entities);
     }
 
     private static extendDatabaseOptions(connection: string, databaseOptions: TypeOrmModuleOptions) {

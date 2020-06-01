@@ -1,8 +1,8 @@
 import { Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
+import { InjectRepository } from '@core/database';
 import { ApplicationService } from '@core/services';
 import { ClassTransformer, ClassValidator } from '@core/utils';
 import { ValidationContainerException } from '@core/exceptions';

@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Result, Ok, Err } from '@usefultools/monads';
+import { InjectRepository } from '@core/database';
 import { ApplicationService } from '@core/services';
 import { ClassTransformer } from '@core/utils';
 import { EntityNotFoundException } from '@core/exceptions';

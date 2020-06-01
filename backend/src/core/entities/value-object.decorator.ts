@@ -1,5 +1,8 @@
-import { Entity as TypeOrmEntity, EntityOptions as TypeOrmEntityOptions } from 'typeorm';
+import {
+    Entity as DatabaseEntity,
+    EntityOptions as DatabaseEntityOptions,
+} from '../database/entity.decorator';
 
-export function ValueObject(options?: TypeOrmEntityOptions) {
-    return TypeOrmEntity(options);
+export function ValueObject(options?: DatabaseEntityOptions) {
+    return DatabaseEntity(options);
 }

@@ -2,8 +2,8 @@ import * as bcrypt from 'bcrypt';
 import { Column, JoinTable, ManyToMany } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { Validate, ValidationResult, ValidationContainerResult } from '@core/utils';
-import { ValidationContainerException } from '@core/exceptions';
 import { Entity, BaseEntity } from '@core/entities';
+import { ValidationContainerException } from '@core/exceptions';
 import { Permission } from './permission.entity';
 import { Group } from './group.entity';
 
@@ -14,7 +14,7 @@ export const EMAIL_MAX_LENGTH = 254;
 export const FIRST_NAME_MAX_LENGTH = 30;
 export const LAST_NAME_MAX_LENGTH = 150;
 
-@Entity()
+@Entity({ swappable: true })
 export class User extends BaseEntity {
 
     @Column({
@@ -22,60 +22,60 @@ export class User extends BaseEntity {
         length: USERNAME_MAX_LENGTH,
         unique: true,
     })
-    private _username: string;
+    protected _username: string;
 
     @Column({
         name: 'password',
         length: PASSWORD_MAX_LENGTH,
     })
-    private _password: string;
+    protected _password: string;
 
     @Column({
         name: 'email',
         length: EMAIL_MAX_LENGTH,
         unique: true,
     })
-    private _email: string;
+    protected _email: string;
 
     @Column({
         name: 'firstName',
         length: FIRST_NAME_MAX_LENGTH,
     })
-    private _firstName: string;
+    protected _firstName: string;
 
     @Column({
         name: 'lastName',
         length: LAST_NAME_MAX_LENGTH,
     })
-    private _lastName: string;
+    protected _lastName: string;
 
     @Column({
         name: 'isActive',
         default: true,
     })
-    private _isActive: boolean;
+    protected _isActive: boolean;
 
     @Column({
         name: 'isAdmin',
         default: false,
     })
-    private _isAdmin: boolean;
+    protected _isAdmin: boolean;
 
     @Column({
         name: 'isSuperuser',
         default: false,
     })
-    private _isSuperuser: boolean;
+    protected _isSuperuser: boolean;
 
     @ManyToMany(type => Group)
     @JoinTable()
-    private _groups: Group[];
+    protected _groups: Group[];
 
     @ManyToMany(type => Permission)
     @JoinTable()
-    private _permissions: Permission[];
+    protected _permissions: Permission[];
 
-    private constructor(
+    protected constructor(
         username: string,
         email: string,
         firstName: string,
