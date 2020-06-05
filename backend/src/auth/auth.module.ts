@@ -36,8 +36,8 @@ import { UsersCommand } from './commands/users.command';
 import authConfig from './auth.config';
 
 export interface AuthModuleOptions {
-    enableUsersApi?: boolean;
-    enableAuthApi?: boolean;
+    enableAuthJwtApi?: boolean;
+    enableAuthPasswordApi?: boolean;
 }
 
 const jwtAsyncOptions = {
@@ -106,12 +106,12 @@ export class AuthModule {
     static forRoot(options: AuthModuleOptions = {}): DynamicModule {
         const controllers = [];
 
-        if (isUndefined(options.enableUsersApi) || options.enableUsersApi === true) {
-            controllers.push(AuthPasswordController);
+        if (isUndefined(options.enableAuthJwtApi) || options.enableAuthJwtApi === true) {
+            controllers.push(AuthJwtController);
         }
 
-        if (isUndefined(options.enableAuthApi) || options.enableAuthApi === true) {
-            controllers.push(AuthJwtController);
+        if (isUndefined(options.enableAuthPasswordApi) || options.enableAuthPasswordApi === true) {
+            controllers.push(AuthPasswordController);
         }
 
         return {
