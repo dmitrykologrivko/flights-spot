@@ -6,7 +6,7 @@ import { UserFactory } from '@auth/test/factories/user.factory';
 import { AppModule } from '@app/app.module';
 import unauthorizedResponse from '../common/responses/unauthorized.response';
 
-describe('JwtAuthController (e2e)', () => {
+describe('AuthJwtController (e2e)', () => {
     let app;
     let userRepository: Repository<User>;
 

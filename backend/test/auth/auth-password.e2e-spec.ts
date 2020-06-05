@@ -8,7 +8,7 @@ import unauthorizedResponse from '../common/responses/unauthorized.response';
 import changePasswordInvalidDataResponse from './responses/change-password-invalid-data.response';
 import changePasswordWrongPasswordResponse from './responses/change-password-wrong-password.response';
 
-describe('UserController (e2e)', () => {
+describe('AuthPasswordController (e2e)', () => {
     let app;
     let authTestUtils: AuthTestUtils;
 
@@ -31,17 +31,17 @@ describe('UserController (e2e)', () => {
         await app.close();
     });
 
-    describe('/api/users/change-password (POST)', () => {
+    describe('/api/auth/password/change (POST)', () => {
         it('when request is not authorized should return unauthorized error', async () => {
             return request(app.getHttpServer())
-                .post('/api/users/change-password')
+                .post('/api/auth/password/change')
                 .expect(401)
                 .expect(unauthorizedResponse);
         });
 
         it('when request is invalid should return validation errors', async () => {
             return request(app.getHttpServer())
-                .post('/api/users/change-password')
+                .post('/api/auth/password/change')
                 .send({})
                 .set('Accept', 'application/json')
                 .set('Authorization', jwtAuthHeader)
@@ -56,7 +56,7 @@ describe('UserController (e2e)', () => {
             };
 
             return request(app.getHttpServer())
-                .post('/api/users/change-password')
+                .post('/api/auth/password/change')
                 .send(req)
                 .set('Accept', 'application/json')
                 .set('Authorization', jwtAuthHeader)
@@ -71,7 +71,7 @@ describe('UserController (e2e)', () => {
             };
 
             return request(app.getHttpServer())
-                .post('/api/users/change-password')
+                .post('/api/auth/password/change')
                 .send(req)
                 .set('Accept', 'application/json')
                 .set('Authorization', jwtAuthHeader)

@@ -11,7 +11,7 @@ import { JwtAuthService } from '../services/jwt-auth.service';
 
 @UsePipes(ValidationPipe)
 @ApiController('auth')
-export class JwtAuthController {
+export class AuthJwtController {
     constructor(
         private readonly authService: JwtAuthService,
     ) {}

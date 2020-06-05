@@ -17,8 +17,8 @@ import { JwtAuthService } from './services/jwt-auth.service';
 import { UserPasswordService } from './services/user-password.service';
 import { UserService } from './services/user.service';
 import { UserRegistrationService } from './services/user-registration.service';
-import { JwtAuthController } from './controllers/jwt-auth.controller';
-import { UserController } from './controllers/user.controller';
+import { AuthJwtController } from './controllers/auth-jwt.controller';
+import { AuthPasswordController } from './controllers/auth-password.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { IsAuthenticatedGuard } from './guards/is-authenticated.guard';
@@ -107,11 +107,11 @@ export class AuthModule {
         const controllers = [];
 
         if (isUndefined(options.enableUsersApi) || options.enableUsersApi === true) {
-            controllers.push(UserController);
+            controllers.push(AuthPasswordController);
         }
 
         if (isUndefined(options.enableAuthApi) || options.enableAuthApi === true) {
-            controllers.push(JwtAuthController);
+            controllers.push(AuthJwtController);
         }
 
         return {

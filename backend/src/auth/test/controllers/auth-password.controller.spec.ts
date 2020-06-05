@@ -1,15 +1,15 @@
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ValidationContainerException } from '@core/utils';
-import { UserController } from '../../controllers/user.controller';
+import { AuthPasswordController } from '../../controllers/auth-password.controller';
 import { UserService } from '../../services/user.service';
 import { User } from '../../entities/user.entity';
 import { UserFactory } from '../factories/user.factory';
 
-describe('UserController', () => {
+describe('AuthPasswordController', () => {
     const REQUEST = { ip: '0.0.0.0' };
 
-    let controller: UserController;
+    let controller: AuthPasswordController;
     let userService: MockProxy<UserService> & UserService;
 
     let user: User;
@@ -18,7 +18,7 @@ describe('UserController', () => {
 
     beforeEach(async () => {
         userService = mock<UserService>();
-        controller = new UserController(userService);
+        controller = new AuthPasswordController(userService);
 
         user = await UserFactory.makeUser();
 

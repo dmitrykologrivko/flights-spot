@@ -1,2 +1,2 @@
-export * from './jwt-auth.controller';
-export * from './user.controller';
+export * from './auth-jwt.controller';
+export * from './auth-password.controller';

@@ -1,12 +1,12 @@
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { EntityNotFoundException } from '@core/domain';
-import { JwtAuthController } from '../../controllers/jwt-auth.controller';
+import { AuthJwtController } from '../../controllers/auth-jwt.controller';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { UserFactory } from '../factories/user.factory';
 
-describe('JwtAuthController', () => {
-    let controller: JwtAuthController;
+describe('AuthJwtController', () => {
+    let controller: AuthJwtController;
     let jwtAuthService: MockProxy<JwtAuthService> & JwtAuthService;
 
     const loginRequest = {
@@ -18,7 +18,7 @@ describe('JwtAuthController', () => {
 
     beforeEach(() => {
         jwtAuthService = mock<JwtAuthService>();
-        controller = new JwtAuthController(jwtAuthService);
+        controller = new AuthJwtController(jwtAuthService);
     });
 
     describe('#login()', () => {

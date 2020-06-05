@@ -20,15 +20,15 @@ import { BindSelfInterceptor } from '../interceptors/bind-self.interceptor';
 
 @UsePipes(ValidationPipe)
 @UseFilters(ValidationExceptionsFilter)
-@ApiController('users')
-export class UserController {
+@ApiController('auth/password')
+export class AuthPasswordController {
     constructor(
         private readonly userService: UserService,
     ) {}
 
     @UseGuards(JwtAuthGuard)
     @UseInterceptors(BindSelfInterceptor)
-    @Post('change-password')
+    @Post('change')
     async changePassword(@Request() req, @Body() input: ChangePasswordInput) {
         Logger.log(`Attempt to change password (IP ${req.ip})`);
 
@@ -41,7 +41,7 @@ export class UserController {
         return result.unwrap();
     }
 
-    @Post('forgot-password')
+    @Post('forgot')
     async forgotPassword(@Request() req, @Body() input: ForgotPasswordInput) {
         Logger.log(`Attempt to send recover password email (IP ${req.ip})`);
 
@@ -54,7 +54,7 @@ export class UserController {
         return result.unwrap();
     }
 
-    @Post('reset-password')
+    @Post('reset')
     async resetPassword(@Request() req, @Body() input: ResetPasswordInput) {
         Logger.log(`Attempt to recover password (IP ${req.ip})`);
 
