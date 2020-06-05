@@ -16,6 +16,7 @@ import { UserService } from '../services/user.service';
 import { ChangePasswordInput } from '../dto/change-password.input';
 import { ForgotPasswordInput } from '../dto/forgot-password.input';
 import { ResetPasswordInput } from '../dto/reset-password.input';
+import { ResetPasswordValidateRequest } from '../dto/reset-password-validate.request';
 import { BindSelfInterceptor } from '../interceptors/bind-self.interceptor';
 
 @UsePipes(ValidationPipe)
@@ -65,5 +66,10 @@ export class AuthPasswordController {
         }
 
         return result.unwrap();
+    }
+
+    @Post('reset/validate')
+    async validateResetToken(@Body() input: ResetPasswordValidateRequest) {
+        return;
     }
 }
