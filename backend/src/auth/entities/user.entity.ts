@@ -7,7 +7,7 @@ import {
     ValidationContainerResult,
     ValidationContainerException,
 } from '@core/utils';
-import { Entity, BaseEntity } from '@core/entities';
+import { Entity, BaseEntity } from '@core/domain';
 import { Permission } from './permission.entity';
 import { Group } from './group.entity';
 

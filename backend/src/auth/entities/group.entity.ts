@@ -1,6 +1,6 @@
 import { Column, ManyToMany, JoinTable } from 'typeorm';
 import { Result } from '@usefultools/monads';
-import { Entity, BaseEntity } from '@core/entities';
+import { Entity, BaseEntity } from '@core/domain';
 import { Permission } from './permission.entity';
 import { Validate, ValidationContainerException } from '@core/utils';
 
