@@ -10,7 +10,7 @@ import {
     ValidationPipe,
 } from '@nestjs/common';
 import { ApiController } from '@core/controllers';
-import { ValidationExceptionsFilter } from '@core/exceptions';
+import { ValidationExceptionsFilter } from '@core/utils';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserService } from '../services/user.service';
 import { ChangePasswordInput } from '../dto/change-password.input';

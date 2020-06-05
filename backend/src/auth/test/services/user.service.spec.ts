@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
-import { ValidationException, ValidationContainerException } from '@core/exceptions';
+import { ValidationException, ValidationContainerException } from '@core/utils';
 import { ClassTransformer } from '@core/utils';
 import { SimpleIocContainer, createClassValidatorContainer } from '@core/testing';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../../constants/auth.properties';

@@ -2,8 +2,7 @@ import { Column, ManyToMany, JoinTable } from 'typeorm';
 import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
 import { Permission } from './permission.entity';
-import { Validate } from '@core/utils';
-import { ValidationContainerException } from '@core/exceptions';
+import { Validate, ValidationContainerException } from '@core/utils';
 
 export const GROUP_NAME_MAX_LENGTH = 150;
 

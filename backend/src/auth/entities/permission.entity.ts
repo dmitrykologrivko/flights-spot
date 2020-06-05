@@ -1,8 +1,7 @@
 import { Column } from 'typeorm';
 import { Result } from '@usefultools/monads';
 import { Entity, BaseEntity } from '@core/entities';
-import { Validate } from '@core/utils';
-import { ValidationContainerException } from '@core/exceptions';
+import { Validate, ValidationContainerException } from '@core/utils';
 
 export const PERMISSION_NAME_MAX_LENGTH = 255;
 export const CODENAME_MAX_LENGTH = 100;

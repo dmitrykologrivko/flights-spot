@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ClassValidator } from './class-validator.util';
+import { ClassValidator } from './validation/class-validator.util';
 import { ClassTransformer } from './class-transformer.util';
 
 @Module({

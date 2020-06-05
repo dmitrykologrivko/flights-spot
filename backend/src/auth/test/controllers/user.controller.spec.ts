@@ -1,6 +1,6 @@
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { ValidationContainerException } from '@core/exceptions';
+import { ValidationContainerException } from '@core/utils';
 import { UserController } from '../../controllers/user.controller';
 import { UserService } from '../../services/user.service';
 import { User } from '../../entities/user.entity';

@@ -1,6 +1,7 @@
 import { Result, Ok, Err } from '@usefultools/monads';
 import { Validator } from 'class-validator';
-import { ValidationException, ValidationContainerException } from '../exceptions';
+import { ValidationException } from './validation.exception';
+import { ValidationContainerException } from './validation-container.exception';
 
 export type ValidationResult = Result<void, ValidationException>;
 export type ValidationContainerResult = Result<void, ValidationContainerException>;

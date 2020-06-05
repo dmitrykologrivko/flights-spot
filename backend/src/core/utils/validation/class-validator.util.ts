@@ -3,8 +3,8 @@ import { validate, ValidationOptions, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { Result, Ok, Err } from '@usefultools/monads';
-import { ValidationException } from '../exceptions/validation.exception';
-import { ValidationContainerException } from '../exceptions/validation-container.exception';
+import { ValidationException } from './validation.exception';
+import { ValidationContainerException } from './validation-container.exception';
 
 /**
  * Class validation util

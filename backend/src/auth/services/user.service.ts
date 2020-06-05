@@ -4,8 +4,11 @@ import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
 import { InjectRepository } from '@core/database';
 import { ApplicationService } from '@core/services';
-import { ClassTransformer, ClassValidator } from '@core/utils';
-import { ValidationContainerException } from '@core/exceptions';
+import {
+    ClassTransformer,
+    ClassValidator,
+    ValidationContainerException,
+} from '@core/utils';
 import { AUTH_PASSWORD_SALT_ROUNDS_PROPERTY } from '../constants/auth.properties';
 import { UserNotFoundException } from '../exceptions/user-not-found-exception';
 import { User } from '../entities/user.entity';

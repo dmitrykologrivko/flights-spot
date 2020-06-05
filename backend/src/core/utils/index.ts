@@ -1,5 +1,4 @@
 export * from './utils.module';
-export * from './validate.util';
+export * from './validation';
 export * from './class-transformer.util';
-export * from './class-validator.util';
 export * from './precondition.utils';
