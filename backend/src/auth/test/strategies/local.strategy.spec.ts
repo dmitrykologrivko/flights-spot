@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/exceptions';
+import { EntityNotFoundException } from '@core/domain';
 import { IncorrectPasswordException } from '../../exceptions/incorrect-password.exception';
 import { LocalStrategy } from '../../strategies/local.strategy';
 import { AuthService } from '../../services/auth.service';

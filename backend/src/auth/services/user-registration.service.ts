@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@core/database';
-import { DomainService } from '@core/services';
+import { DomainService } from '@core/domain';
 import { User } from '../entities/user.entity';
 
 @DomainService()

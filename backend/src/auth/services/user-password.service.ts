@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
 import { InjectRepository } from '@core/database';
-import { DomainService } from '@core/services';
+import { DomainService } from '@core/domain';
 import { AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY } from '../constants/auth.properties';
 import { User } from '../entities/user.entity';
 import { ResetPasswordTokenInvalidException } from '../exceptions/reset-password-token-invalid.exception';

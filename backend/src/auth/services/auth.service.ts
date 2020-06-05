@@ -1,9 +1,8 @@
 import { Repository } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { InjectRepository } from '@core/database';
-import { ApplicationService } from '@core/services';
 import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/exceptions';
+import { ApplicationService, EntityNotFoundException } from '@core/domain';
 import { BaseAuthService } from './base-auth.service';
 import { IncorrectPasswordException } from '../exceptions/incorrect-password.exception';
 import { User } from '../entities/user.entity';

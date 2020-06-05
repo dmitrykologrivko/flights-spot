@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/exceptions';
+import { EntityNotFoundException } from '@core/domain';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { User } from '../../entities/user.entity';
 import { ValidatePayloadInput } from '../../dto/validate-payload.input';

@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Result, Ok, Err } from '@usefultools/monads';
 import { PropertyConfigService } from '@core/config';
 import { InjectRepository } from '@core/database';
-import { ApplicationService } from '@core/services';
+import { ApplicationService } from '@core/domain';
 import {
     ClassTransformer,
     ClassValidator,

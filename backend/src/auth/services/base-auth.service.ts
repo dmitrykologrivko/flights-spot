@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { Result, Ok, Err } from '@usefultools/monads';
-import { EntityNotFoundException } from '@core/exceptions';
+import { EntityNotFoundException } from '@core/domain';
 import { User } from '../entities/user.entity';
 import { BaseLoginInput } from '../dto/base-login.input';
 import { BaseLoginOutput } from '../dto/base-login.output';

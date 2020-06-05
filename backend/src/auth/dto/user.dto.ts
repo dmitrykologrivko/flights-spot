@@ -1,5 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
-import { EntityDto } from '@core/dto';
+import { EntityDto } from '@core/domain';
 
 @Exclude()
 export class UserDto extends EntityDto {

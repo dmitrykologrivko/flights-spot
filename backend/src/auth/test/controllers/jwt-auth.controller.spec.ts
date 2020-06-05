@@ -1,6 +1,6 @@
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { EntityNotFoundException } from '@core/exceptions';
+import { EntityNotFoundException } from '@core/domain';
 import { JwtAuthController } from '../../controllers/jwt-auth.controller';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { UserFactory } from '../factories/user.factory';
