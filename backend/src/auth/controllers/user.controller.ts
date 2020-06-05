@@ -9,7 +9,7 @@ import {
     UseFilters,
     ValidationPipe,
 } from '@nestjs/common';
-import { ApiController } from '@core/controllers';
+import { ApiController } from '@core/rest';
 import { ValidationExceptionsFilter } from '@core/utils';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UserService } from '../services/user.service';

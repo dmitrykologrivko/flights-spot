@@ -5,7 +5,7 @@ import {
     UsePipes,
     ValidationPipe,
 } from '@nestjs/common';
-import { ApiController } from '@core/controllers';
+import { ApiController } from '@core/rest';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { JwtAuthService } from '../services/jwt-auth.service';
 
