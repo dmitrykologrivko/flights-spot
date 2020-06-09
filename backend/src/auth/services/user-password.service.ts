@@ -35,10 +35,6 @@ export class UserPasswordService {
         return await user.comparePassword(password);
     }
 
-    async isEmailActive(email: string): Promise<boolean> {
-        return await this.userRepository.findOne({ where: { _email: email, _isActive: true } }) !== undefined;
-    }
-
     async isResetPasswordTokenValid(token: string): Promise<boolean> {
         const result = await this.verifyResetPasswordToken(token);
         return result.is_ok();

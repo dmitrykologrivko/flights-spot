@@ -16,7 +16,7 @@ import { AuthService } from './services/auth.service';
 import { JwtAuthService } from './services/jwt-auth.service';
 import { UserPasswordService } from './services/user-password.service';
 import { UserService } from './services/user.service';
-import { UserRegistrationService } from './services/user-registration.service';
+import { UserVerificationService } from './services/user-verification.service';
 import { AuthJwtController } from './controllers/auth-jwt.controller';
 import { AuthPasswordController } from './controllers/auth-password.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -71,7 +71,7 @@ const jwtAsyncOptions = {
     ],
     providers: [
         UserService,
-        UserRegistrationService,
+        UserVerificationService,
         UserPasswordService,
         AuthService,
         JwtAuthService,

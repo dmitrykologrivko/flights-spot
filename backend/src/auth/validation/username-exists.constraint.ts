@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
-import { UserRegistrationService } from '../services/user-registration.service';
+import { UserVerificationService } from '../services/user-verification.service';
 
 @ValidatorConstraint({ name: 'usernameExists', async: true })
 @Injectable()
 export class UsernameExistsConstraint {
     constructor(
-        private readonly userRegistrationService: UserRegistrationService,
+        private readonly userVerificationService: UserVerificationService,
     ) {}
 
     async validate(username: string) {
-        return this.userRegistrationService.isUsernameExists(username);
+        return this.userVerificationService.isUsernameExists(username);
     }
 
     defaultMessage(args: ValidationArguments) {
