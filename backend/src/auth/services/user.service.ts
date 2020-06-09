@@ -16,6 +16,7 @@ import { UserPasswordService } from './user-password.service';
 import { CreateUserInput } from '../dto/create-user.input';
 import { CreateUserOutput } from '../dto/create-user.output';
 import { ChangePasswordInput } from '../dto/change-password.input';
+import { ForceChangePasswordInput } from '../dto/force-change-password.input';
 import { ForgotPasswordInput } from '../dto/forgot-password.input';
 import { ResetPasswordInput } from '../dto/reset-password.input';
 import { FindUserInput } from '../dto/find-user.input';
@@ -23,6 +24,7 @@ import { FindUserOutput } from '../dto/find-user.output';
 
 type CreateUserResult = Promise<Result<CreateUserOutput, ValidationContainerException>>;
 type ChangePasswordResult = Promise<Result<void, ValidationContainerException>>;
+type ForceChangePasswordResult = Promise<Result<void, ValidationContainerException>>;
 type ForgotPasswordResult = Promise<Result<void, ValidationContainerException>>;
 type ResetPasswordResult = Promise<Result<void, ValidationContainerException>>;
 type FindUserResult = Promise<Result<FindUserOutput, UserNotFoundException>>;
@@ -68,7 +70,7 @@ export class UserService {
     }
 
     /**
-     * Changes user password
+     * Allows changing the user password if provided current password is correct
      * @param input change password dto
      */
     async changePassword(input: ChangePasswordInput): ChangePasswordResult {
@@ -82,12 +84,34 @@ export class UserService {
         await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
         await this.userRepository.save(user);
 
+        Logger.log(`Password has been changed for ${user.username}`);
+
+        return Ok(null);
+    }
+
+    /**
+     * Allows force changing the user password
+     * @param input force change password dto
+     */
+    async forceChangePassword(input: ForceChangePasswordInput): ForceChangePasswordResult {
+        const validateResult = await ClassValidator.validate(ForceChangePasswordInput, input);
+
+        if (validateResult.is_err()) {
+            return validateResult;
+        }
+
+        const user = await this.userRepository.findOne({ where: { _username: input.username } });
+        await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));
+        await this.userRepository.save(user);
+
+        Logger.log(`Password has been changed for ${user.username}`);
+
         return Ok(null);
     }
 
     /**
      * Generates reset password token and sends to user email
-     * @param input
+     * @param input forgot password dto
      */
     async forgotPassword(input: ForgotPasswordInput): ForgotPasswordResult {
         const validateResult = await ClassValidator.validate(ForgotPasswordInput, input);
@@ -108,7 +132,7 @@ export class UserService {
 
     /**
      * Resets user password by reset password token
-     * @param input
+     * @param input reset password dto
      */
     async resetPassword(input: ResetPasswordInput): ResetPasswordResult {
         const validateResult = await ClassValidator.validate(ResetPasswordInput, input);

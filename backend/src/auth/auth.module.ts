@@ -28,6 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailUniqueConstraint } from './validation/email-unique.constraint';
 import { EmailActiveConstraint } from './validation/email-active.constraint';
 import { UsernameUniqueConstraint } from './validation/username-unique.constraint';
+import { UsernameExistsConstraint } from './validation/username-exists.constraint';
 import { PasswordMatchConstraint } from './validation/password-match.constraint';
 import { ResetPasswordTokenValidConstraint } from './validation/reset-password-token-valid.constraint';
 import { BindUserInterceptor } from './interceptors/bind-user.interceptor';
@@ -83,6 +84,7 @@ const jwtAsyncOptions = {
         EmailUniqueConstraint,
         EmailActiveConstraint,
         UsernameUniqueConstraint,
+        UsernameExistsConstraint,
         PasswordMatchConstraint,
         ResetPasswordTokenValidConstraint,
         BindUserInterceptor,

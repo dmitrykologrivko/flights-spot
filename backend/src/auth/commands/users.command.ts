@@ -61,7 +61,7 @@ export class UsersCommand {
             lastName = prompt('Last name: ');
         }
 
-        const createUserResult = await this.userService.createUser({
+        const result = await this.userService.createUser({
             username,
             password,
             email,
@@ -72,10 +72,46 @@ export class UsersCommand {
             isSuperuser: true,
         });
 
-        if (createUserResult.is_ok()) {
+        if (result.is_ok()) {
             Logger.log(`Superuser "${username}" has been created`);
         } else {
-            const message = createUserResult.unwrap_err()
+            const message = result.unwrap_err()
+                .validationExceptions
+                .map(exception => exception.toString())
+                .join('');
+            Logger.error(message);
+        }
+    }
+
+    @Handler({ shortcut: 'change-password' })
+    async changePassword(
+        @CliArgument({
+            name: 'username',
+            optional: true,
+        })
+        username?: string,
+
+        @CliArgument({
+            name: 'password',
+            optional: true,
+        })
+        password?: string,
+    ) {
+        if (!username) {
+            username = prompt('Username: ');
+        }
+
+        if (!password) {
+            password = prompt.hide('Password: ');
+        }
+
+        const result = await this.userService.forceChangePassword({
+            username,
+            newPassword: password,
+        });
+
+        if (result.is_err()) {
+            const message = result.unwrap_err()
                 .validationExceptions
                 .map(exception => exception.toString())
                 .join('');

@@ -17,4 +17,8 @@ export class UserRegistrationService {
     async isUsernameUnique(username: string): Promise<boolean> {
         return await this.userRepository.count({ where: { _username: username } }) === 0;
     }
+
+    async isUsernameExists(username: string): Promise<boolean> {
+        return await this.userRepository.findOne({ where: { _username: username } }) !== undefined;
+    }
 }
