@@ -52,21 +52,23 @@ export class UserPasswordService {
     }
 
     async verifyResetPasswordToken(token: string): Promise<Result<User, ResetPasswordTokenInvalidException>> {
+        let payload;
+
         try {
-            const payload = await this.jwtService.verifyAsync(token);
-
-            const user = await this.userRepository.findOne({
-                where: { id: payload.sub, _isActive: true },
-            });
-
-            if (!user || this.getResetPasswordTokenKey(user) !== payload.key) {
-                return Err(new ResetPasswordTokenInvalidException());
-            }
-
-            return Ok(user);
+            payload = await this.jwtService.verifyAsync(token);
         } catch (e) {
             return Err(new ResetPasswordTokenInvalidException());
         }
+
+        const user = await this.userRepository.findOne({
+            where: { id: payload.sub, _isActive: true },
+        });
+
+        if (!user || this.getResetPasswordTokenKey(user) !== payload.key) {
+            return Err(new ResetPasswordTokenInvalidException());
+        }
+
+        return Ok(user);
     }
 
     private getResetPasswordTokenKey(user: User) {

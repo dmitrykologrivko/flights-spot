@@ -96,9 +96,7 @@ export class UserService {
             return Err(validateResult.unwrap_err());
         }
 
-        const user = await this.userRepository.findOne({
-            where: { _email: input.email, _isActive: true },
-        });
+        const user = await this.userRepository.findOne({ where: { _email: input.email } });
 
         const token = await this.passwordService.createResetPasswordToken(user);
 
