@@ -124,6 +124,7 @@ export class UserService {
 
         const token = await this.passwordService.createResetPasswordToken(user);
 
+        // TODO: Send email
         Logger.debug(`(DEBUG) Reset token: ${token}`);
         Logger.log(`Recover password email has been sent for ${user.username}`);
 

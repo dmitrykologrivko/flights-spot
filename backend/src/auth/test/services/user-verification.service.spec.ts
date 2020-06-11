@@ -10,6 +10,7 @@ describe('UserVerificationService', () => {
     const USERNAME = UserFactory.DEFAULT_USERNAME;
     const PASSWORD = UserFactory.DEFAULT_PASSWORD;
     const EMAIL_QUERY = { where: { _email: EMAIL } };
+    const EMAIL_ACTIVE_QUERY = { where: { _email: EMAIL, _isActive: true } };
     const USERNAME_QUERY = { where: { _username: USERNAME } };
 
     let service: UserVerificationService;
@@ -44,6 +45,26 @@ describe('UserVerificationService', () => {
         });
     });
 
+    describe('#isEmailActive()',  () => {
+        it('when email is active should return true', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+
+            const result = await service.isEmailActive(EMAIL);
+
+            expect(result).toBe(true);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(EMAIL_ACTIVE_QUERY);
+        });
+
+        it('when email is not active should return false', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(undefined));
+
+            const result = await service.isEmailActive(EMAIL);
+
+            expect(result).toBe(false);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(EMAIL_ACTIVE_QUERY);
+        });
+    });
+
     describe('#isUsernameUnique()',  () => {
         it('when username is unique should return true', async () => {
             userRepository.count.mockReturnValue(Promise.resolve(0));
@@ -64,41 +85,23 @@ describe('UserVerificationService', () => {
         });
     });
 
-    // describe('#comparePassword()', () => {
-    //     it('when user not found by id should return false', async () => {
-    //         userRepository.findOne.mockReturnValue(Promise.resolve(null));
-    //
-    //         const result = await service.comparePassword(ID, PASSWORD);
-    //
-    //         expect(result).toBe(false);
-    //         expect(userRepository.findOne.mock.calls[0][0]).toEqual(ID);
-    //     });
-    //
-    //     it('when user not found by username should return false', async () => {
-    //         userRepository.findOne.mockReturnValue(Promise.resolve(null));
-    //
-    //         const result = await service.comparePassword(USERNAME, PASSWORD);
-    //
-    //         expect(result).toBe(false);
-    //         expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
-    //     });
-    //
-    //     it('when user id and password are match should return true', async () => {
-    //         userRepository.findOne.mockReturnValue(Promise.resolve(user));
-    //
-    //         const result = await service.comparePassword(ID, PASSWORD);
-    //
-    //         expect(result).toBe(true);
-    //         expect(userRepository.findOne.mock.calls[0][0]).toEqual(ID);
-    //     });
-    //
-    //     it('when username and password are match should return true', async () => {
-    //         userRepository.findOne.mockReturnValue(Promise.resolve(user));
-    //
-    //         const result = await service.comparePassword(USERNAME, PASSWORD);
-    //
-    //         expect(result).toBe(true);
-    //         expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
-    //     });
-    // });
+    describe('#isUsernameExists()',  () => {
+        it('when username exists should return true', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+
+            const result = await service.isUsernameExists(USERNAME);
+
+            expect(result).toBe(true);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
+        });
+
+        it('when username does not exist should return false', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(undefined));
+
+            const result = await service.isUsernameExists(USERNAME);
+
+            expect(result).toBe(false);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
+        });
+    });
 });

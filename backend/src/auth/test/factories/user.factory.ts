@@ -20,6 +20,8 @@ export class UserFactory {
         const user = createUserResult.unwrap();
 
         user.id = id;
+        user.created = new Date();
+        user.updated = new Date();
 
         return user;
     }
