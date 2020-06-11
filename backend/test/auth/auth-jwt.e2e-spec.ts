@@ -1,21 +1,21 @@
 import * as request from 'supertest';
-import { Repository } from 'typeorm';
 import { bootstrapTestingApplication } from '@core/testing';
 import { User } from '@auth/entities';
 import { UserFactory } from '@auth/test/factories/user.factory';
+import { AuthTestUtils } from '@auth/test/auth-test.utils';
 import { AppModule } from '@app/app.module';
 import unauthorizedResponse from '../common/responses/unauthorized.response';
 
 describe('AuthJwtController (e2e)', () => {
     let app;
-    let userRepository: Repository<User>;
+    let authTestUtils: AuthTestUtils;
 
     beforeAll(async () => {
         const bootstrapper = await bootstrapTestingApplication({ module: AppModule });
         app = bootstrapper.container;
         await bootstrapper.init();
 
-        userRepository = app.get('UserRepository');
+        authTestUtils = new AuthTestUtils(app);
     });
 
     afterAll(async () => {
@@ -23,7 +23,7 @@ describe('AuthJwtController (e2e)', () => {
     });
 
     afterEach(async () => {
-        await userRepository.clear();
+        await authTestUtils.clearAllUsers();
     });
 
     describe('/api/auth/login (POST)', () => {
@@ -40,9 +40,9 @@ describe('AuthJwtController (e2e)', () => {
         });
 
         it('when user is inactive should return unauthorized error', async () => {
-            const user = await UserFactory.makeUser();
+            const user = await authTestUtils.makeAndSaveUser();
             user.deactivateUser();
-            await userRepository.save(user);
+            await authTestUtils.saveUser(user);
 
             return request(app.getHttpServer())
                 .post('/api/auth/login')
@@ -56,8 +56,7 @@ describe('AuthJwtController (e2e)', () => {
         });
 
         it('when wrong password is provided should return unauthorized error', async () => {
-            const user = await UserFactory.makeUser();
-            await userRepository.save(user);
+            await authTestUtils.makeAndSaveUser();
 
             return request(app.getHttpServer())
                 .post('/api/auth/login')
@@ -71,8 +70,7 @@ describe('AuthJwtController (e2e)', () => {
         });
 
         it('when username and password are correct should return access token', async () => {
-            const user = await UserFactory.makeUser();
-            await userRepository.save(user);
+            await authTestUtils.makeAndSaveUser();
 
             return request(app.getHttpServer())
                 .post('/api/auth/login')

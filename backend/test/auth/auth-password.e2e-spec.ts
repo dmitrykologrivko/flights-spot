@@ -7,6 +7,12 @@ import { AppModule } from '@app/app.module';
 import unauthorizedResponse from '../common/responses/unauthorized.response';
 import changePasswordInvalidDataResponse from './responses/change-password-invalid-data.response';
 import changePasswordWrongPasswordResponse from './responses/change-password-wrong-password.response';
+import forgotPasswordInvalidDataResponse from './responses/forgot-password-invalid-data.response';
+import forgotPasswordEmailNotActiveResponse from './responses/forgot-password-email-not-active.response';
+import resetPasswordInvalidDataResponse from './responses/reset-password-invalid-data.response';
+import resetPasswordTokenInvalidResponse from './responses/reset-password-token-invalid.response';
+import validateResetPasswordInvalidDataResponse from './responses/validate-reset-password-token-invalid-data.response';
+import validateResetPasswordInvalidTokenResponse from './responses/validate-reset-password-token-invalid-token.response';
 
 describe('AuthPasswordController (e2e)', () => {
     let app;
@@ -21,14 +27,19 @@ describe('AuthPasswordController (e2e)', () => {
         await bootstrapper.init();
 
         authTestUtils = new AuthTestUtils(app);
+    });
 
+    afterAll(async () => {
+        await app.close();
+    });
+
+    beforeEach(async () => {
         user = await authTestUtils.makeAndSaveUser();
         jwtAuthHeader = await authTestUtils.getJwtAuthHeader(user);
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await authTestUtils.clearAllUsers();
-        await app.close();
     });
 
     describe('/api/auth/password/change (POST)', () => {
@@ -75,6 +86,121 @@ describe('AuthPasswordController (e2e)', () => {
                 .send(req)
                 .set('Accept', 'application/json')
                 .set('Authorization', jwtAuthHeader)
+                .expect(201);
+        });
+    });
+
+    describe('/api/auth/password/forgot (POST)', () => {
+        it('when request is invalid should return validation errors', async () => {
+            return request(app.getHttpServer())
+                .post('/api/auth/password/forgot')
+                .send({})
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(forgotPasswordInvalidDataResponse());
+        });
+
+        it('when email is not active should return validation error', async () => {
+            user.deactivateUser();
+            await authTestUtils.saveUser(user);
+
+            const req = {
+                email: user.email,
+                newPassword: 'new-password',
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/forgot')
+                .send(req)
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(forgotPasswordEmailNotActiveResponse(req));
+        });
+
+        it('when request is valid should return successful response', async () => {
+            const req = {
+                email: user.email,
+                newPassword: 'new-password',
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/forgot')
+                .send(req)
+                .set('Accept', 'application/json')
+                .expect(201);
+        });
+    });
+
+    describe('/api/auth/password/reset (POST)', () => {
+        it('when request is invalid should return validation errors', async () => {
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset')
+                .send({})
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(resetPasswordInvalidDataResponse());
+        });
+
+        it('when reset password token is not valid should return validation error', async () => {
+            const req = {
+                resetPasswordToken: `${await authTestUtils.generateResetPasswordToken(user)}.wrong`,
+                newPassword: 'new-password',
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset')
+                .send(req)
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(resetPasswordTokenInvalidResponse(req));
+        });
+
+        it('when request is valid should return successful response', async () => {
+            const req = {
+                resetPasswordToken: await authTestUtils.generateResetPasswordToken(user),
+                newPassword: 'new-password',
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset')
+                .send(req)
+                .set('Accept', 'application/json')
+                .expect(201);
+        });
+    });
+
+    describe('/api/auth/password/reset/validate (POST)', () => {
+        it('when request is invalid should return validation errors', async () => {
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset/validate')
+                .send({})
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(validateResetPasswordInvalidDataResponse());
+        });
+
+        it('when reset password token is not valid should return validation error', async () => {
+            const req = {
+                resetPasswordToken: `${await authTestUtils.generateResetPasswordToken(user)}.wrong`,
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset/validate')
+                .send(req)
+                .set('Accept', 'application/json')
+                .expect(400)
+                .expect(validateResetPasswordInvalidTokenResponse(req));
+        });
+
+        it('when request is valid should return successful response', async () => {
+            const req = {
+                resetPasswordToken: await authTestUtils.generateResetPasswordToken(user),
+            };
+
+            return request(app.getHttpServer())
+                .post('/api/auth/password/reset/validate')
+                .send(req)
+                .set('Accept', 'application/json')
                 .expect(201);
         });
     });
