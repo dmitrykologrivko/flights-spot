@@ -1,10 +1,9 @@
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/domain';
 import { AuthService } from '../../services/auth.service';
 import { IncorrectPasswordException } from '../../exceptions/incorrect-password.exception';
+import { UserNotFoundException } from '../../exceptions/user-not-found-exception';
 import { User } from '../../entities/user.entity';
 import { ValidateCredentialsInput } from '../../dto/validate-credentials.input';
 import { ValidateCredentialsOutput } from '../../dto/validate-credentials.output';
@@ -41,7 +40,7 @@ describe('AuthService', () => {
             const result = await service.validateCredentials(validateCredentialsInput);
 
             expect(result.is_err()).toBe(true);
-            expect(result.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
+            expect(result.unwrap_err()).toBeInstanceOf(UserNotFoundException);
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(FIND_USER_QUERY);
         });
 

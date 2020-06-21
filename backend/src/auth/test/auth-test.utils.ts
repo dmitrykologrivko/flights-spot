@@ -1,17 +1,21 @@
 import { Repository } from 'typeorm';
+import { getTargetName } from '@core/database';
 import { User } from '../entities/user.entity';
-import { JwtAuthService } from '../services/jwt-auth.service';
+import { RevokedToken } from '../entities/revoked-token.entity';
 import { UserPasswordService } from '../services/user-password.service';
+import { UserJwtService } from '../services/user-jwt.service';
 import { UserFactory } from './factories/user.factory';
 
 export class AuthTestUtils {
     private readonly _userRepository: Repository<User>;
-    private readonly _jwtAuthService: JwtAuthService;
+    private readonly _revokedTokenRepository: Repository<RevokedToken>;
+    private readonly _userJwtService: UserJwtService;
     private readonly _userPasswordService: UserPasswordService;
 
     constructor(app: any) {
-        this._userRepository = app.get('UserRepository');
-        this._jwtAuthService = app.get(JwtAuthService);
+        this._userRepository = app.get(`${getTargetName(User)}Repository`);
+        this._revokedTokenRepository = app.get(`${RevokedToken.name}Repository`);
+        this._userJwtService = app.get(UserJwtService);
         this._userPasswordService = app.get(UserPasswordService);
     }
 
@@ -29,19 +33,30 @@ export class AuthTestUtils {
     }
 
     async generateJwtToken(user: User) {
-        const loginResult = await this._jwtAuthService.login({ username: user.username });
-        return loginResult.unwrap().accessToken;
+        const result = await this._userJwtService.generateAccessToken(user.username);
+        return result.unwrap();
+    }
+
+    async revokeJwtToken(token: string) {
+        const result = await this._userJwtService.revokeAccessToken(token);
+        await this._revokedTokenRepository.save(result.unwrap());
+    }
+
+    async getJwtAuthHeader(userOrToken: User | string) {
+        return `Bearer ${typeof userOrToken === 'string'
+            ? userOrToken
+            : await this.generateJwtToken(userOrToken)}`;
     }
 
     async generateResetPasswordToken(user: User) {
         return this._userPasswordService.createResetPasswordToken(user);
     }
 
-    async getJwtAuthHeader(user: User) {
-        return `Bearer ${await this.generateJwtToken(user)}`;
-    }
-
     get userRepository(): Repository<User> {
         return this._userRepository;
+    }
+
+    get revokedTokenRepository(): Repository<RevokedToken> {
+        return this._revokedTokenRepository;
     }
 }

@@ -12,11 +12,13 @@ import { AUTH_JWT_EXPIRES_IN_PROPERTY } from './constants/auth.properties';
 import { User } from './entities/user.entity';
 import { Group } from './entities/group.entity';
 import { Permission } from './entities/permission.entity';
+import { RevokedToken } from './entities/revoked-token.entity';
 import { AuthService } from './services/auth.service';
 import { JwtAuthService } from './services/jwt-auth.service';
-import { UserPasswordService } from './services/user-password.service';
 import { UserService } from './services/user.service';
 import { UserVerificationService } from './services/user-verification.service';
+import { UserPasswordService } from './services/user-password.service';
+import { UserJwtService } from './services/user-jwt.service';
 import { AuthJwtController } from './controllers/auth-jwt.controller';
 import { AuthPasswordController } from './controllers/auth-password.controller';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -65,7 +67,7 @@ const jwtAsyncOptions = {
 @Module({
     imports: [
         ConfigModule.forFeature(authConfig),
-        DatabaseModule.withEntities([User, Group, Permission]),
+        DatabaseModule.withEntities([User, Group, Permission, RevokedToken]),
         PassportModule,
         JwtModule.registerAsync(jwtAsyncOptions),
     ],
@@ -73,6 +75,7 @@ const jwtAsyncOptions = {
         UserService,
         UserVerificationService,
         UserPasswordService,
+        UserJwtService,
         AuthService,
         JwtAuthService,
         LocalAuthGuard,

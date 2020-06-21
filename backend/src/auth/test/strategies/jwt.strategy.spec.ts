@@ -2,8 +2,8 @@ import { UnauthorizedException } from '@nestjs/common';
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
-import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/domain';
+import { ClassTransformer, ValidationException } from '@core/utils';
+import { PAYLOAD_VALID } from '../../constants/auth.constraints';
 import { JwtStrategy } from '../../strategies/jwt.strategy';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { User } from '../../entities/user.entity';
@@ -44,7 +44,13 @@ describe('JwtStrategy', () => {
 
     describe('#validate()', () => {
         it('when user is not exist should throw unauthorized exception', async () => {
-            authService.validatePayload.mockReturnValue(Promise.resolve(Err(new EntityNotFoundException())));
+            authService.validatePayload.mockReturnValue(Promise.resolve(Err(
+                new ValidationException(
+                    'payload',
+                    payload,
+                    { [PAYLOAD_VALID.key]: PAYLOAD_VALID.message },
+                ),
+            )));
 
             await expect(
                 strategy.validate(payload),

@@ -1,96 +1,139 @@
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/domain';
+import {
+    ClassTransformer,
+    ValidationException,
+    Ok,
+    Err,
+} from '@core/utils';
+import { UserNotFoundException } from '../../exceptions/user-not-found-exception';
+import { AccessTokenInvalidException } from '../../exceptions/access-token-invalid.exception';
 import { JwtAuthService } from '../../services/jwt-auth.service';
+import { UserJwtService } from '../../services/user-jwt.service';
 import { User } from '../../entities/user.entity';
+import { RevokedToken } from '../../entities/revoked-token.entity';
 import { ValidatePayloadInput } from '../../dto/validate-payload.input';
 import { ValidatePayloadOutput } from '../../dto/validate-payload.output';
 import { JwtLoginInput } from '../../dto/jwt-login.input';
 import { JwtLoginOutput } from '../../dto/jwt-login.output';
+import { JwtLogoutInput } from '../../dto/jwt-logout.input';
+import { JwtLogoutOutput } from '../../dto/jwt-logout.output';
 import { UserFactory } from '../factories/user.factory';
 
 describe('JwtAuthService', () => {
-    const FIND_USER_QUERY = { where: { _username: UserFactory.DEFAULT_USERNAME, _isActive: true } };
     const ACCESS_TOKEN = 'qf3fssf54djfsv78';
+    const JTI = 'ff008d0e71d294';
 
     let service: JwtAuthService;
     let userRepository: MockProxy<Repository<User>>;
-    let jwtService: MockProxy<JwtService> & JwtService;
+    let revokedTokenRepository: MockProxy<Repository<RevokedToken>>;
+    let userJwtService: MockProxy<UserJwtService> & UserJwtService;
 
     let user: User;
+    let revokedToken: RevokedToken;
     let payload: {
         username: string,
         sub: number,
+        jti: string,
     };
     let validatePayloadInput: ValidatePayloadInput;
     let validatePayloadOutput: ValidatePayloadOutput;
     let jwtLoginInput: JwtLoginInput;
     let jwtLoginOutput: JwtLoginOutput;
+    let jwtLogoutInput: JwtLogoutInput;
+    let jwtLogoutOutput: JwtLogoutOutput;
 
     beforeEach(async () => {
         userRepository = mock<Repository<User>>();
-        jwtService = mock<JwtService>();
-        service = new JwtAuthService(userRepository, jwtService);
+        revokedTokenRepository = mock<Repository<RevokedToken>>();
+        userJwtService = mock<UserJwtService>();
+        service = new JwtAuthService(userRepository, revokedTokenRepository, userJwtService);
 
         user = await UserFactory.makeUser();
+
+        revokedToken = RevokedToken.create(JTI, user).unwrap();
 
         payload = {
             username: user.username,
             sub: user.id,
+            jti: JTI,
         };
 
-        validatePayloadInput = { payload: { username: user.username } };
+        validatePayloadInput = { payload };
         validatePayloadOutput = ClassTransformer.toClassObject(ValidatePayloadOutput, user);
 
         jwtLoginInput = { username: user.username };
         jwtLoginOutput = { accessToken: ACCESS_TOKEN };
+
+        jwtLogoutInput = { token: ACCESS_TOKEN };
+        jwtLogoutOutput = {};
     });
 
     describe('#validatePayload()', () => {
-        it('when user is not exist should return not found error', async () => {
-            userRepository.findOne.mockReturnValue(Promise.resolve(null));
+        it('when input is not valid should return validation error', async () => {
+            userJwtService.validatePayload.mockReturnValue(Promise.resolve(Err(AccessTokenInvalidException)));
 
             const result = await service.validatePayload(validatePayloadInput);
 
             expect(result.is_err()).toBe(true);
-            expect(result.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
-            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(FIND_USER_QUERY);
+            expect(result.unwrap_err()).toBeInstanceOf(ValidationException);
+            expect(userJwtService.validatePayload.mock.calls[0][0]).toBe(validatePayloadInput.payload);
         });
 
-        it('when user exists correct should return user', async () => {
-            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+        it('when input is valid should return user', async () => {
+            userJwtService.validatePayload.mockReturnValue(Promise.resolve(Ok(user)));
 
             const result = await service.validatePayload(validatePayloadInput);
 
             expect(result.is_ok()).toBe(true);
             expect(result.unwrap()).toStrictEqual(validatePayloadOutput);
-            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(FIND_USER_QUERY);
+            expect(userJwtService.validatePayload.mock.calls[0][0]).toBe(validatePayloadInput.payload);
         });
     });
 
     describe('#login()', () => {
-        it('when user is not exist should return not found error', async () => {
-            userRepository.findOne.mockReturnValue(Promise.resolve(null));
+        it('when input is not valid should return validation error', async () => {
+            userJwtService.generateAccessToken.mockReturnValue(Promise.resolve(Err(UserNotFoundException)));
 
             const result = await service.login(jwtLoginInput);
 
             expect(result.is_err()).toBe(true);
-            expect(result.unwrap_err()).toBeInstanceOf(EntityNotFoundException);
-            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(FIND_USER_QUERY);
+            expect(result.unwrap_err()).toBeInstanceOf(ValidationException);
+            expect(userJwtService.generateAccessToken.mock.calls[0][0]).toBe(jwtLoginInput.username);
         });
 
-        it('when user exists should return access token', async () => {
-            userRepository.findOne.mockReturnValue(Promise.resolve(user));
-            jwtService.signAsync.mockReturnValue(Promise.resolve(ACCESS_TOKEN));
+        it('when input is valid should return access token', async () => {
+            userJwtService.generateAccessToken.mockReturnValue(Promise.resolve(Ok(ACCESS_TOKEN)));
 
             const result = await service.login(jwtLoginInput);
 
             expect(result.is_ok()).toBe(true);
             expect(result.unwrap()).toStrictEqual(jwtLoginOutput);
-            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(FIND_USER_QUERY);
-            expect(jwtService.signAsync.mock.calls[0][0]).toStrictEqual(payload);
+            expect(userJwtService.generateAccessToken.mock.calls[0][0]).toBe(jwtLoginInput.username);
+        });
+    });
+
+    describe('#logout()', () => {
+        it('when input is not valid should return validation error', async () => {
+            userJwtService.revokeAccessToken.mockReturnValue(Promise.resolve(Err(AccessTokenInvalidException)));
+
+            const result = await service.logout(jwtLogoutInput);
+
+            expect(result.is_err()).toBe(true);
+            expect(result.unwrap_err()).toBeInstanceOf(ValidationException);
+            expect(userJwtService.revokeAccessToken.mock.calls[0][0]).toBe(jwtLogoutInput.token);
+        });
+
+        it('when input is valid should return empty output', async () => {
+            userJwtService.revokeAccessToken.mockReturnValue(Promise.resolve(Ok(revokedToken)));
+            revokedTokenRepository.save.mockReturnValue(Promise.resolve(revokedToken));
+
+            const result = await service.logout(jwtLogoutInput);
+
+            expect(result.is_ok()).toBe(true);
+            expect(result.unwrap()).toStrictEqual(jwtLogoutOutput);
+            expect(userJwtService.revokeAccessToken.mock.calls[0][0]).toBe(jwtLogoutInput.token);
+            expect(revokedTokenRepository.save.mock.calls[0][0]).toBe(revokedToken);
         });
     });
 });

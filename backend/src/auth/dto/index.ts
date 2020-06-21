@@ -4,6 +4,8 @@ export * from './base-logout.input';
 export * from './base-logout.output';
 export * from './jwt-login.input';
 export * from './jwt-login.output';
+export * from './jwt-logout.input';
+export * from './jwt-logout.output';
 export * from './validate-credentials.input';
 export * from './validate-credentials.output';
 export * from './validate-payload.input';

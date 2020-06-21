@@ -85,4 +85,57 @@ describe('AuthJwtController (e2e)', () => {
                 });
         });
     });
+
+    describe('/api/auth/logout (POST)', () => {
+        let user: User;
+        let accessToken: string;
+        let jwtAuthHeader: string;
+
+        beforeEach(async () => {
+            user = await authTestUtils.makeAndSaveUser();
+            accessToken = await authTestUtils.generateJwtToken(user);
+            jwtAuthHeader = await authTestUtils.getJwtAuthHeader(accessToken);
+        });
+
+        afterEach(async () => {
+            await authTestUtils.revokedTokenRepository.clear();
+        });
+
+        it('when request is not authorized should return unauthorized error', async () => {
+            return request(app.getHttpServer())
+                .post('/api/auth/logout')
+                .expect(401)
+                .expect(unauthorizedResponse);
+        });
+
+        it('when access token is revoked should return unauthorized error', async () => {
+            await authTestUtils.revokeJwtToken(accessToken);
+
+            return request(app.getHttpServer())
+                .post('/api/auth/logout')
+                .set('Accept', 'application/json')
+                .set('Authorization', jwtAuthHeader)
+                .expect(401)
+                .expect(unauthorizedResponse);
+        });
+
+        it('when user not found should return return unauthorized error', async () => {
+            await authTestUtils.userRepository.remove(user);
+
+            return request(app.getHttpServer())
+                .post('/api/auth/logout')
+                .set('Accept', 'application/json')
+                .set('Authorization', jwtAuthHeader)
+                .expect(401)
+                .expect(unauthorizedResponse);
+        });
+
+        it('when access token is valid should return successful response', async () => {
+            return request(app.getHttpServer())
+                .post('/api/auth/logout')
+                .set('Accept', 'application/json')
+                .set('Authorization', jwtAuthHeader)
+                .expect(201);
+        });
+    });
 });
