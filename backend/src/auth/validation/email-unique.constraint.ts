@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
+import { EMAIL_UNIQUE_CONSTRAINT } from '../constants/auth.constraints';
 import { UserVerificationService } from '../services/user-verification.service';
 
-@ValidatorConstraint({ name: 'emailUnique', async: true })
+@ValidatorConstraint({ name: EMAIL_UNIQUE_CONSTRAINT.key, async: true })
 @Injectable()
 export class EmailUniqueConstraint {
     constructor(
@@ -14,6 +15,6 @@ export class EmailUniqueConstraint {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return 'User with this email already exists';
+        return EMAIL_UNIQUE_CONSTRAINT.message;
     }
 }

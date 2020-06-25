@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
+import { RESET_PASSWORD_TOKEN_VALID_CONSTRAINT } from '../constants/auth.constraints';
 import { UserPasswordService } from '../services/user-password.service';
 
-@ValidatorConstraint({ name: 'resetPasswordTokenValid', async: true })
+@ValidatorConstraint({ name: RESET_PASSWORD_TOKEN_VALID_CONSTRAINT.key, async: true })
 @Injectable()
 export class ResetPasswordTokenValidConstraint {
     constructor(
@@ -14,6 +15,6 @@ export class ResetPasswordTokenValidConstraint {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return 'Reset password token is not valid';
+        return RESET_PASSWORD_TOKEN_VALID_CONSTRAINT.message;
     }
 }

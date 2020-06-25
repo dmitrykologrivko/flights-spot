@@ -11,9 +11,9 @@ import {
 import { BaseAuthService } from './base-auth.service';
 import { UserJwtService } from './user-jwt.service';
 import {
-    PAYLOAD_VALID,
-    JWT_TOKEN_VALID,
-    USERNAME_ACTIVE,
+    PAYLOAD_VALID_CONSTRAINT,
+    JWT_TOKEN_VALID_CONSTRAINT,
+    USERNAME_ACTIVE_CONSTRAINT,
 } from '../constants/auth.constraints';
 import { User } from '../entities/user.entity';
 import { RevokedToken } from '../entities/revoked-token.entity';
@@ -49,7 +49,7 @@ export class JwtAuthService extends BaseAuthService {
                 new ValidationException(
                     'payload',
                     input.payload,
-                    { [PAYLOAD_VALID.key]: PAYLOAD_VALID.message },
+                    { [PAYLOAD_VALID_CONSTRAINT.key]: PAYLOAD_VALID_CONSTRAINT.message },
                 )
             ))
             .toResult();
@@ -62,7 +62,7 @@ export class JwtAuthService extends BaseAuthService {
                 new ValidationException(
                     'username',
                     input.username,
-                    { [USERNAME_ACTIVE.key]: USERNAME_ACTIVE.message },
+                    { [USERNAME_ACTIVE_CONSTRAINT.key]: USERNAME_ACTIVE_CONSTRAINT.message },
                 )
             ))
             .toResult();
@@ -78,7 +78,7 @@ export class JwtAuthService extends BaseAuthService {
                  new ValidationException(
                     'token',
                     input.token,
-                    { [JWT_TOKEN_VALID.key]: JWT_TOKEN_VALID.message },
+                    { [JWT_TOKEN_VALID_CONSTRAINT.key]: JWT_TOKEN_VALID_CONSTRAINT.message },
                 )
             ))
             .toResult();

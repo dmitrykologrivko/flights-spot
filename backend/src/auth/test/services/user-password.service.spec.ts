@@ -25,7 +25,7 @@ describe('UserPasswordService', () => {
 
     let user: User;
 
-    let resetPasswordTokenKey: string;
+    let resetPasswordTokenId: string;
 
     beforeEach(async () => {
         userRepository = mock<Repository<User>>();
@@ -36,7 +36,7 @@ describe('UserPasswordService', () => {
 
         user = await UserFactory.makeUser();
 
-        resetPasswordTokenKey = crypto.createHash('sha256')
+        resetPasswordTokenId = crypto.createHash('sha256')
             .update(`${user.password}${user.created.getTime()}`, 'utf8')
             .digest('hex');
     });
@@ -50,15 +50,6 @@ describe('UserPasswordService', () => {
             expect(result.is_err()).toBeTruthy();
             expect(result.unwrap_err()).toBeInstanceOf(CredentialsInvalidException);
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
-
-            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
-            //
-            // const result = await service.validateCredentials(validateCredentialsInput);
-            //
-            // expect(result.is_err()).toBe(true);
-            // expect(result.unwrap_err()).toBeInstanceOf(NonFieldValidationException);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(validateCredentialsInput.password);
         });
 
         it('when password is wrong should return credentials invalid error', async () => {
@@ -71,21 +62,6 @@ describe('UserPasswordService', () => {
             expect(result.is_err()).toBeTruthy();
             expect(result.unwrap_err()).toBeInstanceOf(CredentialsInvalidException);
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
-
-
-            // const wrongPassword = 'wrong-password';
-            //
-            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
-            //
-            // const result = await service.validateCredentials({
-            //     ...validateCredentialsInput,
-            //     password: wrongPassword,
-            // });
-            //
-            // expect(result.is_err()).toBe(true);
-            // expect(result.unwrap_err()).toBeInstanceOf(NonFieldValidationException);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(wrongPassword);
         });
 
         it('when username and password are correct should return user', async () => {
@@ -96,15 +72,6 @@ describe('UserPasswordService', () => {
             expect(result.is_ok()).toBeTruthy();
             expect(result.unwrap()).toStrictEqual(user);
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
-
-            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Ok(user)));
-            //
-            // const result = await service.validateCredentials(validateCredentialsInput);
-            //
-            // expect(result.is_ok()).toBe(true);
-            // expect(result.unwrap()).toStrictEqual(validateCredentialsOutput);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
-            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(validateCredentialsInput.password);
         });
     });
 
@@ -146,24 +113,24 @@ describe('UserPasswordService', () => {
         });
     });
 
-    describe('#createResetPasswordToken()', () => {
+    describe('#generateResetPasswordToken()', () => {
         it('should return valid token', async () => {
             config.get.mockReturnValue('1m');
 
-            const token = await service.createResetPasswordToken(user);
+            const token = await service.generateResetPasswordToken(user);
 
             const payload = await jwtService.verifyAsync(token);
 
             expect(payload.sub).toBe(user.id);
-            expect(payload.key).toBe(resetPasswordTokenKey);
+            expect(payload.jti).toBe(resetPasswordTokenId);
 
             expect(config.get.mock.calls[0][0]).toBe(AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY);
         });
     });
 
-    describe('#verifyResetPasswordToken()', () => {
+    describe('#validateResetPasswordToken()', () => {
         it('when token is not valid should return error', async () => {
-            const result = await service.verifyResetPasswordToken('wrong-token');
+            const result = await service.validateResetPasswordToken('wrong-token');
 
             expect(result.is_err()).toBeTruthy();
             expect(result.unwrap_err()).toBeInstanceOf(ResetPasswordTokenInvalidException);
@@ -172,9 +139,9 @@ describe('UserPasswordService', () => {
         it('when token verified but user not exist should return error', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(undefined));
 
-            const token = await jwtService.signAsync({ sub: user.id, key: resetPasswordTokenKey });
+            const token = await jwtService.signAsync({ sub: user.id, key: resetPasswordTokenId });
 
-            const result = await service.verifyResetPasswordToken(token);
+            const result = await service.validateResetPasswordToken(token);
 
             expect(result.is_err()).toBeTruthy();
             expect(result.unwrap_err()).toBeInstanceOf(ResetPasswordTokenInvalidException);
@@ -182,12 +149,12 @@ describe('UserPasswordService', () => {
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USER_ID_QUERY);
         });
 
-        it('when token verified but key is not valid should return error', async () => {
+        it('when token verified but token id is not valid should return error', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
 
             const token = await jwtService.signAsync({ sub: user.id, key: 'wrong-key' });
 
-            const result = await service.verifyResetPasswordToken(token);
+            const result = await service.validateResetPasswordToken(token);
 
             expect(result.is_err()).toBeTruthy();
             expect(result.unwrap_err()).toBeInstanceOf(ResetPasswordTokenInvalidException);
@@ -198,9 +165,9 @@ describe('UserPasswordService', () => {
         it('when token is valid should return user', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
 
-            const token = await jwtService.signAsync({ sub: user.id, key: resetPasswordTokenKey });
+            const token = await jwtService.signAsync({ sub: user.id, jti: resetPasswordTokenId });
 
-            const result = await service.verifyResetPasswordToken(token);
+            const result = await service.validateResetPasswordToken(token);
 
             expect(result.is_ok()).toBeTruthy();
             expect(result.unwrap()).toBe(user);
@@ -218,7 +185,7 @@ describe('UserPasswordService', () => {
         it('when token verified but user not exist should return false', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(undefined));
 
-            const token = await jwtService.signAsync({ sub: user.id, key: resetPasswordTokenKey });
+            const token = await jwtService.signAsync({ sub: user.id, jti: resetPasswordTokenId });
 
             const result = await service.isResetPasswordTokenValid(token);
 
@@ -227,7 +194,7 @@ describe('UserPasswordService', () => {
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USER_ID_QUERY);
         });
 
-        it('when token verified but key is not valid should return false', async () => {
+        it('when token verified but token id is not valid should return false', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
 
             const token = await jwtService.signAsync({ sub: user.id, key: 'wrong-key' });
@@ -242,7 +209,7 @@ describe('UserPasswordService', () => {
         it('when token is valid should return true', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
 
-            const token = await jwtService.signAsync({ sub: user.id, key: resetPasswordTokenKey });
+            const token = await jwtService.signAsync({ sub: user.id, jti: resetPasswordTokenId });
 
             const result = await service.isResetPasswordTokenValid(token);
 

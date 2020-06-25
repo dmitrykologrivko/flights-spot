@@ -483,7 +483,7 @@ describe('UserService', () => {
         it.skip('when input is valid should send reset password email', async () => {
             userVerificationService.isEmailActive.mockReturnValue(Promise.resolve(true));
             userRepository.findOne.mockReturnValue(Promise.resolve(user));
-            userPasswordService.createResetPasswordToken.mockReturnValue(Promise.resolve(RESET_PASSWORD_TOKEN));
+            userPasswordService.generateResetPasswordToken.mockReturnValue(Promise.resolve(RESET_PASSWORD_TOKEN));
 
             const result = await service.forgotPassword(forgotPasswordInput);
 
@@ -494,7 +494,7 @@ describe('UserService', () => {
             expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual({
                 where: { _email: forgotPasswordInput.email },
             });
-            expect(userPasswordService.createResetPasswordToken.mock.calls[0][0]).toBe(user);
+            expect(userPasswordService.generateResetPasswordToken.mock.calls[0][0]).toBe(user);
         });
     });
 
@@ -553,7 +553,7 @@ describe('UserService', () => {
         it('when input is valid should reset password', async () => {
             config.get.mockReturnValue(10);
             userPasswordService.isResetPasswordTokenValid.mockReturnValue(Promise.resolve(true));
-            userPasswordService.verifyResetPasswordToken.mockReturnValue(Promise.resolve(Ok(user)));
+            userPasswordService.validateResetPasswordToken.mockReturnValue(Promise.resolve(Ok(user)));
             userRepository.save.mockReturnValue(Promise.resolve(user));
 
             expect(await user.comparePassword(UserFactory.DEFAULT_PASSWORD)).toBeTruthy();
@@ -569,7 +569,7 @@ describe('UserService', () => {
                 .toBe(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY);
             expect(userPasswordService.isResetPasswordTokenValid.mock.calls[0][0])
                 .toBe(resetPasswordInput.resetPasswordToken);
-            expect(userPasswordService.verifyResetPasswordToken.mock.calls[0][0])
+            expect(userPasswordService.validateResetPasswordToken.mock.calls[0][0])
                 .toBe(resetPasswordInput.resetPasswordToken);
             expect(userRepository.save.mock.calls[0][0])
                 .toBe(user);

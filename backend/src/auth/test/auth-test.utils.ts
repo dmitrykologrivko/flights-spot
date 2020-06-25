@@ -49,7 +49,7 @@ export class AuthTestUtils {
     }
 
     async generateResetPasswordToken(user: User) {
-        return this._userPasswordService.createResetPasswordToken(user);
+        return this._userPasswordService.generateResetPasswordToken(user);
     }
 
     get userRepository(): Repository<User> {

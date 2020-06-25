@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
+import { EMAIL_ACTIVE_CONSTRAINT } from '../constants/auth.constraints';
 import { UserVerificationService } from '../services/user-verification.service';
 
-@ValidatorConstraint({ name: 'emailActive', async: true })
+@ValidatorConstraint({ name: EMAIL_ACTIVE_CONSTRAINT.key, async: true })
 @Injectable()
 export class EmailActiveConstraint {
     constructor(
@@ -14,6 +15,6 @@ export class EmailActiveConstraint {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return 'Email is not found';
+        return EMAIL_ACTIVE_CONSTRAINT.message;
     }
 }

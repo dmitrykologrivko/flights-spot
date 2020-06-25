@@ -3,7 +3,7 @@ import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
 import { ClassTransformer, ValidationException } from '@core/utils';
-import { PAYLOAD_VALID } from '../../constants/auth.constraints';
+import { PAYLOAD_VALID_CONSTRAINT } from '../../constants/auth.constraints';
 import { JwtStrategy } from '../../strategies/jwt.strategy';
 import { JwtAuthService } from '../../services/jwt-auth.service';
 import { User } from '../../entities/user.entity';
@@ -48,7 +48,7 @@ describe('JwtStrategy', () => {
                 new ValidationException(
                     'payload',
                     payload,
-                    { [PAYLOAD_VALID.key]: PAYLOAD_VALID.message },
+                    { [PAYLOAD_VALID_CONSTRAINT.key]: PAYLOAD_VALID_CONSTRAINT.message },
                 ),
             )));
 

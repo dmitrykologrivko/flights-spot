@@ -122,7 +122,7 @@ export class UserService {
 
         const user = await this.userRepository.findOne({ where: { _email: input.email } });
 
-        const token = await this.passwordService.createResetPasswordToken(user);
+        const token = await this.passwordService.generateResetPasswordToken(user);
 
         // TODO: Send email
         Logger.debug(`(DEBUG) Reset token: ${token}`);
@@ -142,7 +142,7 @@ export class UserService {
             return Err(validateResult.unwrap_err());
         }
 
-        const verifyTokenResult = await this.passwordService.verifyResetPasswordToken(input.resetPasswordToken);
+        const verifyTokenResult = await this.passwordService.validateResetPasswordToken(input.resetPasswordToken);
 
         const user = verifyTokenResult.unwrap();
         await user.setPassword(input.newPassword, this.config.get(AUTH_PASSWORD_SALT_ROUNDS_PROPERTY));

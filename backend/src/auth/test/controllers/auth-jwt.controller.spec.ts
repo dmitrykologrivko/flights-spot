@@ -2,8 +2,8 @@ import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ValidationException } from '@core/utils';
 import {
-    JWT_TOKEN_VALID,
-    USERNAME_ACTIVE,
+    JWT_TOKEN_VALID_CONSTRAINT,
+    USERNAME_ACTIVE_CONSTRAINT,
 } from '../../constants/auth.constraints';
 import { AuthJwtController } from '../../controllers/auth-jwt.controller';
 import { JwtAuthService } from '../../services/jwt-auth.service';
@@ -33,7 +33,7 @@ describe('AuthJwtController', () => {
                 new ValidationException(
                     'username',
                     user.username,
-                    { [USERNAME_ACTIVE.key]: USERNAME_ACTIVE.message },
+                    { [USERNAME_ACTIVE_CONSTRAINT.key]: USERNAME_ACTIVE_CONSTRAINT.message },
                 ),
             )));
 
@@ -60,7 +60,7 @@ describe('AuthJwtController', () => {
                 new ValidationException(
                     'token',
                     accessToken,
-                    { [JWT_TOKEN_VALID.key]: JWT_TOKEN_VALID.message },
+                    { [JWT_TOKEN_VALID_CONSTRAINT.key]: JWT_TOKEN_VALID_CONSTRAINT.message },
                 ),
             )));
 

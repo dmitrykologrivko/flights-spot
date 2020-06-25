@@ -1,9 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
-import { ClassTransformer } from '@core/utils';
-import { EntityNotFoundException } from '@core/domain';
-import { CredentialsInvalidException } from '../../exceptions/credentials-invalid.exception';
+import { ClassTransformer, NonFieldValidationException } from '@core/utils';
+import { CREDENTIALS_VALID_CONSTRAINT } from '../../constants/auth.constraints';
 import { LocalStrategy } from '../../strategies/local.strategy';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../entities/user.entity';
@@ -28,7 +27,11 @@ describe('LocalStrategy', () => {
 
     describe('#validate()', () => {
         it('when user is not exist should throw unauthorized exception', async () => {
-            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(new EntityNotFoundException())));
+            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(
+                new NonFieldValidationException(
+                    { [CREDENTIALS_VALID_CONSTRAINT.key]: CREDENTIALS_VALID_CONSTRAINT.message },
+                ),
+            )));
 
             await expect(
                 strategy.validate(UserFactory.DEFAULT_USERNAME, UserFactory.DEFAULT_PASSWORD),
@@ -36,7 +39,11 @@ describe('LocalStrategy', () => {
         });
 
         it('when password is wrong should throw unauthorized exception', async () => {
-            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
+            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(
+                new NonFieldValidationException(
+                    { [CREDENTIALS_VALID_CONSTRAINT.key]: CREDENTIALS_VALID_CONSTRAINT.message },
+                ),
+            )));
 
             await expect(
                 strategy.validate(UserFactory.DEFAULT_USERNAME, UserFactory.DEFAULT_PASSWORD),

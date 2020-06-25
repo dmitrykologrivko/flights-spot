@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
+import { PASSWORD_MATCH_CONSTRAINT } from '../constants/auth.constraints';
 import { UserPasswordService } from '../services/user-password.service';
 
 const USER_ID_PROPERTY = 'userId';
 
-@ValidatorConstraint({ name: 'passwordMatch', async: true })
+@ValidatorConstraint({ name: PASSWORD_MATCH_CONSTRAINT.key, async: true })
 @Injectable()
 export class PasswordMatchConstraint {
     constructor(
@@ -20,6 +21,6 @@ export class PasswordMatchConstraint {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return 'Does not match with current user password';
+        return PASSWORD_MATCH_CONSTRAINT.message;
     }
 }

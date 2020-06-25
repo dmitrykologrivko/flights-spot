@@ -8,7 +8,7 @@ import {
 } from '@core/utils';
 import { ApplicationService } from '@core/domain';
 import { BaseAuthService } from './base-auth.service';
-import { CREDENTIALS_VALID } from '../constants/auth.constraints';
+import { CREDENTIALS_VALID_CONSTRAINT } from '../constants/auth.constraints';
 import { User } from '../entities/user.entity';
 import { UserPasswordService } from '../services/user-password.service';
 import { ValidateCredentialsInput } from '../dto/validate-credentials.input';
@@ -32,7 +32,9 @@ export class AuthService extends BaseAuthService {
                 return ClassTransformer.toClassObject(ValidateCredentialsOutput, user);
             })
             .map_err(() => (
-                new NonFieldValidationException({ [CREDENTIALS_VALID.key]: CREDENTIALS_VALID.message })
+                new NonFieldValidationException(
+                    { [CREDENTIALS_VALID_CONSTRAINT.key]: CREDENTIALS_VALID_CONSTRAINT.message },
+                )
             ))
             .toResult();
     }

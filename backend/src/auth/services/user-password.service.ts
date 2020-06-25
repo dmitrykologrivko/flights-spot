@@ -50,14 +50,14 @@ export class UserPasswordService {
         return await user.comparePassword(password);
     }
 
-    async createResetPasswordToken(user: User) {
+    async generateResetPasswordToken(user: User) {
         return await this.jwtService.signAsync(
-            { sub: user.id, key: this.getResetPasswordTokenKey(user) },
+            { sub: user.id, jti: this.getResetPasswordTokenId(user) },
             { expiresIn: this.config.get(AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY) },
         );
     }
 
-    async verifyResetPasswordToken(token: string): Promise<Result<User, ResetPasswordTokenInvalidException>> {
+    async validateResetPasswordToken(token: string): Promise<Result<User, ResetPasswordTokenInvalidException>> {
         let payload;
 
         try {
@@ -70,7 +70,7 @@ export class UserPasswordService {
             where: { id: payload.sub, _isActive: true },
         });
 
-        if (!user || this.getResetPasswordTokenKey(user) !== payload.key) {
+        if (!user || this.getResetPasswordTokenId(user) !== payload.jti) {
             return Err(new ResetPasswordTokenInvalidException());
         }
 
@@ -78,11 +78,11 @@ export class UserPasswordService {
     }
 
     async isResetPasswordTokenValid(token: string): Promise<boolean> {
-        const result = await this.verifyResetPasswordToken(token);
+        const result = await this.validateResetPasswordToken(token);
         return result.is_ok();
     }
 
-    private getResetPasswordTokenKey(user: User) {
+    private getResetPasswordTokenId(user: User) {
         /*
          * The user's password hashed by bcrypt that guarantee password has
          * new hash value every time even if a password is the same.

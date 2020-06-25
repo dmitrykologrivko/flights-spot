@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ValidatorConstraint, ValidationArguments } from 'class-validator';
+import { USERNAME_UNIQUE_CONSTRAINT } from '../constants/auth.constraints';
 import { UserVerificationService } from '../services/user-verification.service';
 
-@ValidatorConstraint({ name: 'usernameUnique', async: true })
+@ValidatorConstraint({ name: USERNAME_UNIQUE_CONSTRAINT.key, async: true })
 @Injectable()
 export class UsernameUniqueConstraint {
     constructor(
@@ -14,6 +15,6 @@ export class UsernameUniqueConstraint {
     }
 
     defaultMessage(args: ValidationArguments) {
-        return 'User with this username already exists';
+        return USERNAME_UNIQUE_CONSTRAINT.message;
     }
 }
