@@ -42,8 +42,8 @@ export class JwtAuthService extends BaseAuthService {
 
     async validatePayload(input: ValidatePayloadInput): ValidatePayloadResult {
         return AsyncResult.from(this.userJwtService.validatePayload(input.payload))
-            .and_then(user => {
-                return Ok(ClassTransformer.toClassObject(ValidatePayloadOutput, user));
+            .map(user => {
+                return ClassTransformer.toClassObject(ValidatePayloadOutput, user);
             })
             .map_err(() => (
                 new ValidationException(

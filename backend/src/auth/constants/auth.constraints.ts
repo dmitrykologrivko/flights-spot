@@ -13,6 +13,11 @@ export const USERNAME_ACTIVE = {
     message: 'Username is not found',
 };
 
+export const CREDENTIALS_VALID = {
+    key: 'credentialsValid',
+    message: 'Credentials is not valid',
+};
+
 export const JWT_TOKEN_VALID = {
     key: 'jwtTokenValid',
     message: 'JWT token is not valid',

@@ -1,42 +1,39 @@
 import { Repository } from 'typeorm';
-import { Result, Ok, Err } from '@usefultools/monads';
 import { InjectRepository } from '@core/database';
-import { ClassTransformer } from '@core/utils';
-import { ApplicationService, EntityNotFoundException } from '@core/domain';
+import {
+    ClassTransformer,
+    NonFieldValidationException,
+    AsyncResult,
+    Result,
+} from '@core/utils';
+import { ApplicationService } from '@core/domain';
 import { BaseAuthService } from './base-auth.service';
-import { IncorrectPasswordException } from '../exceptions/incorrect-password.exception';
+import { CREDENTIALS_VALID } from '../constants/auth.constraints';
 import { User } from '../entities/user.entity';
+import { UserPasswordService } from '../services/user-password.service';
 import { ValidateCredentialsInput } from '../dto/validate-credentials.input';
 import { ValidateCredentialsOutput } from '../dto/validate-credentials.output';
 
-type ValidateCredentialsResult = Promise<Result<ValidateCredentialsOutput, EntityNotFoundException | IncorrectPasswordException>>;
+type ValidateCredentialsResult = Promise<Result<ValidateCredentialsOutput, NonFieldValidationException>>;
 
 @ApplicationService()
 export class AuthService extends BaseAuthService {
     constructor(
         @InjectRepository(User)
         protected readonly userRepository: Repository<User>,
+        private readonly userPasswordService: UserPasswordService,
     ) {
         super(userRepository);
     }
 
     async validateCredentials(input: ValidateCredentialsInput): ValidateCredentialsResult {
-        const result = await this.findUser(input.username);
-
-        if (result.is_err()) {
-            return Err(result.unwrap_err());
-        }
-
-        const user = result.unwrap();
-
-        const isPasswordValid = await user.comparePassword(input.password);
-
-        if (!isPasswordValid) {
-            return Err(new IncorrectPasswordException());
-        }
-
-        const output = ClassTransformer.toClassObject(ValidateCredentialsOutput, user);
-
-        return Ok(output);
+        return AsyncResult.from(this.userPasswordService.validateCredentials(input.username, input.password))
+            .map(user => {
+                return ClassTransformer.toClassObject(ValidateCredentialsOutput, user);
+            })
+            .map_err(() => (
+                new NonFieldValidationException({ [CREDENTIALS_VALID.key]: CREDENTIALS_VALID.message })
+            ))
+            .toResult();
     }
 }

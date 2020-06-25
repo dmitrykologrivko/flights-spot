@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { PropertyConfigService } from '@core/config';
 import { AUTH_PASSWORD_RESET_TIMEOUT_PROPERTY } from '../../constants/auth.properties';
+import { CredentialsInvalidException } from '../../exceptions/credentials-invalid.exception';
 import { ResetPasswordTokenInvalidException } from '../../exceptions/reset-password-token-invalid.exception';
 import { User } from '../../entities/user.entity';
 import { UserPasswordService } from '../../services/user-password.service';
@@ -13,7 +14,7 @@ describe('UserPasswordService', () => {
     const ID = 1;
     const USERNAME = UserFactory.DEFAULT_USERNAME;
     const PASSWORD = UserFactory.DEFAULT_PASSWORD;
-    const USERNAME_QUERY = { where: { _username: USERNAME } };
+    const USERNAME_QUERY = { where: { _username: USERNAME, _isActive: true } };
     const USER_ID_QUERY = { where: { id: ID, _isActive: true } };
     const SECRET_KEY = 'ff008d0e71d294';
 
@@ -40,6 +41,73 @@ describe('UserPasswordService', () => {
             .digest('hex');
     });
 
+    describe('#validateCredentials()', () => {
+        it('when user is not exist should return credentials invalid error', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(null));
+
+            const result = await service.validateCredentials(USERNAME, PASSWORD);
+
+            expect(result.is_err()).toBeTruthy();
+            expect(result.unwrap_err()).toBeInstanceOf(CredentialsInvalidException);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
+
+            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
+            //
+            // const result = await service.validateCredentials(validateCredentialsInput);
+            //
+            // expect(result.is_err()).toBe(true);
+            // expect(result.unwrap_err()).toBeInstanceOf(NonFieldValidationException);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(validateCredentialsInput.password);
+        });
+
+        it('when password is wrong should return credentials invalid error', async () => {
+            const wrongPassword = 'wrong-password';
+
+            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+
+            const result = await service.validateCredentials(USERNAME, wrongPassword);
+
+            expect(result.is_err()).toBeTruthy();
+            expect(result.unwrap_err()).toBeInstanceOf(CredentialsInvalidException);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
+
+
+            // const wrongPassword = 'wrong-password';
+            //
+            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
+            //
+            // const result = await service.validateCredentials({
+            //     ...validateCredentialsInput,
+            //     password: wrongPassword,
+            // });
+            //
+            // expect(result.is_err()).toBe(true);
+            // expect(result.unwrap_err()).toBeInstanceOf(NonFieldValidationException);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(wrongPassword);
+        });
+
+        it('when username and password are correct should return user', async () => {
+            userRepository.findOne.mockReturnValue(Promise.resolve(user));
+
+            const result = await service.validateCredentials(USERNAME, PASSWORD);
+
+            expect(result.is_ok()).toBeTruthy();
+            expect(result.unwrap()).toStrictEqual(user);
+            expect(userRepository.findOne.mock.calls[0][0]).toStrictEqual(USERNAME_QUERY);
+
+            // userPasswordService.validateCredentials.mockReturnValue(Promise.resolve(Ok(user)));
+            //
+            // const result = await service.validateCredentials(validateCredentialsInput);
+            //
+            // expect(result.is_ok()).toBe(true);
+            // expect(result.unwrap()).toStrictEqual(validateCredentialsOutput);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][0]).toBe(validateCredentialsInput.username);
+            // expect(userPasswordService.validateCredentials.mock.calls[0][1]).toBe(validateCredentialsInput.password);
+        });
+    });
+
     describe('#comparePassword()', () => {
         it('when user not found by id should return false', async () => {
             userRepository.findOne.mockReturnValue(Promise.resolve(null));
@@ -47,7 +115,7 @@ describe('UserPasswordService', () => {
             const result = await service.comparePassword(ID, PASSWORD);
 
             expect(result).toBe(false);
-            expect(userRepository.findOne.mock.calls[0][0]).toEqual(ID);
+            expect(userRepository.findOne.mock.calls[0][0]).toEqual(USER_ID_QUERY);
         });
 
         it('when user not found by username should return false', async () => {
@@ -65,7 +133,7 @@ describe('UserPasswordService', () => {
             const result = await service.comparePassword(ID, PASSWORD);
 
             expect(result).toBe(true);
-            expect(userRepository.findOne.mock.calls[0][0]).toEqual(ID);
+            expect(userRepository.findOne.mock.calls[0][0]).toEqual(USER_ID_QUERY);
         });
 
         it('when username and password are match should return true', async () => {

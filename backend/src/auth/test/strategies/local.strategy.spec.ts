@@ -3,7 +3,7 @@ import { Ok, Err } from '@usefultools/monads';
 import { MockProxy, mock } from 'jest-mock-extended';
 import { ClassTransformer } from '@core/utils';
 import { EntityNotFoundException } from '@core/domain';
-import { IncorrectPasswordException } from '../../exceptions/incorrect-password.exception';
+import { CredentialsInvalidException } from '../../exceptions/credentials-invalid.exception';
 import { LocalStrategy } from '../../strategies/local.strategy';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../entities/user.entity';
@@ -36,7 +36,7 @@ describe('LocalStrategy', () => {
         });
 
         it('when password is wrong should throw unauthorized exception', async () => {
-            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(new IncorrectPasswordException())));
+            authService.validateCredentials.mockReturnValue(Promise.resolve(Err(new CredentialsInvalidException())));
 
             await expect(
                 strategy.validate(UserFactory.DEFAULT_USERNAME, UserFactory.DEFAULT_PASSWORD),
