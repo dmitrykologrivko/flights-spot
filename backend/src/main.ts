@@ -1,4 +1,4 @@
-import { bootstrapApplication } from '@core/bootstrap';
+import { bootstrapApplication } from '@nest-boilerplate/core';
 import { AppModule } from './app.module';
 
 bootstrapApplication({ module: AppModule })
