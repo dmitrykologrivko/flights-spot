@@ -1,7 +1,7 @@
 import {
     isProductionEnvironment,
     isTestEnvironment,
-} from '@nest-boilerplate/core';
+} from '@nestjs-boilerplate/core';
 
 export default () => {
     const appConfig = {};
