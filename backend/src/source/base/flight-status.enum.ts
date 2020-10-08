@@ -1,0 +1,15 @@
+export enum FlightStatusEnum {
+    UNKNOWN = 'unknown',
+    EXPECTED = 'expected',
+    EN_ROUTE = 'en_route',
+    CHECK_IN = 'check_in',
+    BOARDING = 'boarding',
+    GATE_CLOSED = 'gate_closed',
+    DEPARTED = 'departed',
+    DELAYED = 'delayed',
+    APPROACHING = 'approaching',
+    ARRIVED = 'arrived',
+    CANCELED = 'canceled',
+    DIVERTED = 'diverted',
+    CANCELED_UNCERTAIN ='canceled_uncertain',
+}
