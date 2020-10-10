@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CoreModule } from '@nestjs-boilerplate/core';
 import { AuthModule } from '@nestjs-boilerplate/auth';
+import { AircraftModule } from '@aircraft/aircraft.module';
 import { SourceModule } from '@source/source.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -12,6 +13,7 @@ import appConfig from './app.config';
           config: [appConfig],
       }),
       AuthModule.forRoot(),
+      AircraftModule,
       SourceModule,
   ],
   controllers: [AppController],

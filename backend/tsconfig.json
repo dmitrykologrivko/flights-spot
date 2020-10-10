@@ -12,6 +12,7 @@
     "incremental": true,
     "paths": {
         "@app/*": ["src/*"],
+        "@aircraft/*": ["src/aircraft/*"],
         "@source/*": ["src/source/*"]
     }
   },

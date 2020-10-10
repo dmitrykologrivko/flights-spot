@@ -3,15 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { Result, Ok, Err } from '@nestjs-boilerplate/core';
 import { PatronSkyApiException } from './patron-sky-api.exception';
 
-const AIRCRAFTS_API_PATH = 'aircrafts';
-const AIRLINES_API_PATH = 'airlines';
-const AIRPORTS_API_PATH = 'airports';
-const FLIGHTS_API_PATH = 'flights/number';
+const AIRCRAFTS_API_PATH = 'api/aircrafts';
+const AIRLINES_API_PATH = 'api/airlines';
+const AIRPORTS_API_PATH = 'api/airportss';
+const FLIGHTS_API_PATH = 'api/flights/number';
 
 interface Aircraft {
     name: string;
+    iataCode: string;
     isoCode: string;
-    dafifCode: string;
 }
 
 interface Airline {
@@ -91,11 +91,15 @@ export enum FlightStatusEnum {
  */
 @Injectable()
 export class PatronSkyClient {
-    constructor(private apiUrl: string) {}
+    constructor(private readonly host: string) {
+        if (!this.host.endsWith('/')) {
+            this.host = `${host}/`;
+        }
+    }
 
     async getAircrafts(): Promise<Result<Aircraft[], PatronSkyApiException>> {
         try {
-            const aircrafts = await this.fetchData<Aircraft[]>(`${this.apiUrl}/${AIRCRAFTS_API_PATH}`);
+            const aircrafts = await this.fetchData<Aircraft[]>(`${this.host}${AIRCRAFTS_API_PATH}`);
             return Ok(aircrafts);
         } catch (e) {
             return Err(new PatronSkyApiException(e.stack));
@@ -104,7 +108,7 @@ export class PatronSkyClient {
 
     async getAirlines(): Promise<Result<Airline[], PatronSkyApiException>> {
         try {
-            const airlines = await this.fetchData<Airline[]>(`${this.apiUrl}/${AIRLINES_API_PATH}`);
+            const airlines = await this.fetchData<Airline[]>(`${this.host}${AIRLINES_API_PATH}`);
             return Ok(airlines);
         } catch (e) {
             return Err(new PatronSkyApiException(e.stack));
@@ -113,7 +117,7 @@ export class PatronSkyClient {
 
     async getAirports(): Promise<Result<Airport[], PatronSkyApiException>> {
         try {
-            const airports = await this.fetchData<Airport[]>(`${this.apiUrl}/${AIRPORTS_API_PATH}`);
+            const airports = await this.fetchData<Airport[]>(`${this.host}${AIRPORTS_API_PATH}`);
             return Ok(airports);
         } catch (e) {
             return Err(new PatronSkyApiException(e.stack));
@@ -125,7 +129,7 @@ export class PatronSkyClient {
         dataLocal: string,
     ): Promise<Result<Flight[], PatronSkyApiException>> {
         try {
-            const url = `${this.apiUrl}/${FLIGHTS_API_PATH}/${flightNumber}/${dataLocal}`;
+            const url = `${this.host}${FLIGHTS_API_PATH}/${flightNumber}/${dataLocal}`;
             const flights = await this.fetchData<Flight[]>(url);
             return Ok(flights);
         } catch (e) {
@@ -142,6 +146,13 @@ export class PatronSkyClient {
             headers,
             method,
         });
+
+        if (!response.ok) {
+            throw new PatronSkyApiException(
+                `Status: ${response.status} Message: ${await response.text()}`,
+            );
+        }
+
         return await response.json() as T;
     }
 }
