@@ -21,4 +21,7 @@ export class AirlineDto {
     @Expose()
     country: string;
 
+    @Expose()
+    active: boolean;
+
 }

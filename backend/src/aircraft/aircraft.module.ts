@@ -11,5 +11,6 @@ import { AircraftsCommand } from './aircrafts.command';
         SourceModule,
     ],
     providers: [AircraftService, AircraftsCommand],
+    exports: [DatabaseModule],
 })
 export class AircraftModule {}

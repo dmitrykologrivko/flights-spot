@@ -1,4 +1,4 @@
-import { Column } from 'typeorm';
+import { Column, Unique } from 'typeorm';
 import {
     Entity,
     BaseEntity,
@@ -9,62 +9,63 @@ import {
 
 export const NAME_MAX_LENGTH = 128;
 export const IATA_LENGTH = 3;
-export const ISO_LENGTH = 3;
+export const ICAO_LENGTH = 4;
 
 @Entity()
+@Unique(['_name', '_iata', '_icao'])
 export class Aircraft extends BaseEntity {
 
     @Column({
         name: 'name',
         length: NAME_MAX_LENGTH,
-        unique: true,
     })
     private readonly _name: string;
 
     @Column({
-        name: 'iataCode',
+        name: 'iata',
         length: IATA_LENGTH,
-    })
-    private readonly _iataCode: string;
-
-    @Column({
-        name: 'isoCode',
-        length: ISO_LENGTH,
         nullable: true,
     })
-    private readonly _isoCode: string;
+    private readonly _iata: string;
 
-    private constructor(name: string, iataCode: string, isoCode: string) {
+    @Column({
+        name: 'icao',
+        length: ICAO_LENGTH,
+        nullable: true,
+    })
+    private readonly _icao: string;
+
+    private constructor(name: string, iata: string, icao: string) {
         super();
         this._name = name;
-        this._iataCode = iataCode;
-        this._isoCode = isoCode;
+        this._iata = iata;
+        this._icao = icao;
     }
 
     static create(
         name: string,
-        iataCode: string,
-        isoCode: string,
+        iata: string,
+        icao: string,
     ): Result<Aircraft, ValidationContainerException> {
         const validateResult = Validate.withResults([
             Aircraft.validateName(name),
-            Aircraft.validateIataCode(iataCode),
-            Aircraft.validateIsoCode(isoCode),
+            Aircraft.validateIata(iata),
+            Aircraft.validateIcao(icao),
         ]);
 
-        return validateResult.map(() => new Aircraft(name, iataCode, isoCode));
+        return validateResult.map(() => new Aircraft(name, iata, icao));
     }
 
     get name(): string {
         return this._name;
     }
 
-    get isoCode(): string {
-        return this._isoCode;
+    get icao(): string {
+        return this._icao;
     }
 
-    get iataCode(): string {
-        return this._iataCode;
+    get iata(): string {
+        return this._iata;
     }
 
     private static validateName(name: string) {
@@ -74,23 +75,28 @@ export class Aircraft extends BaseEntity {
             .isValid();
     }
 
-    private static validateIataCode(iataCode: string) {
-        return Validate.withProperty('iataCode', iataCode)
+    private static validateIata(iata: string) {
+        if (!iata) {
+            return Validate.withProperty('iata', iata)
+                .isValid();
+        }
+
+        return Validate.withProperty('iata', iata)
             .isNotEmpty()
             .minLength(IATA_LENGTH)
             .maxLength(IATA_LENGTH)
             .isValid();
     }
 
-    private static validateIsoCode(isoCode: string) {
-        if (!isoCode) {
-            return Validate.withProperty('isoCode', isoCode)
+    private static validateIcao(icao: string) {
+        if (!icao) {
+            return Validate.withProperty('icao', icao)
                 .isValid();
         }
 
-        return Validate.withProperty('isoCode', isoCode)
-            .minLength(ISO_LENGTH)
-            .maxLength(ISO_LENGTH)
+        return Validate.withProperty('icao', icao)
+            .minLength(ICAO_LENGTH)
+            .maxLength(ICAO_LENGTH)
             .isValid();
     }
 }

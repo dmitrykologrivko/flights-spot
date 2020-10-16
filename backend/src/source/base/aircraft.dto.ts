@@ -7,9 +7,9 @@ export class AircraftDto {
     name: string;
 
     @Expose()
-    iataCode: string;
+    iata: string;
 
     @Expose()
-    isoCode: string;
+    icao: string;
 
 }

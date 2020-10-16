@@ -13,6 +13,7 @@
     "paths": {
         "@app/*": ["src/*"],
         "@aircraft/*": ["src/aircraft/*"],
+        "@airline/*": ["src/airline/*"],
         "@source/*": ["src/source/*"]
     }
   },
