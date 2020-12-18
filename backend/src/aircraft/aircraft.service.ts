@@ -1,17 +1,44 @@
-import { Connection } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { ApplicationService, Result, Ok, Err } from '@nestjs-boilerplate/core';
+import {
+    ApplicationService,
+    ClassTransformer,
+    Err,
+    InjectRepository,
+    Ok,
+    Result,
+} from '@nestjs-boilerplate/core';
 import { BaseAircraftSource, SourceException } from '@source/base';
 import { Aircraft } from './aircraft.entity';
+import { AircraftDto } from './aircraft.dto';
+import { GetAircraftsInput } from './get-aircrafts.input';
+import { GetAircraftsOutput } from './get-aircrafts.output';
+import { PagePagination } from './pagination/page.pagination';
+import { FilterChain } from './crud/filter-chain.util';
 
+type GetAircraftsResult = Promise<Result<GetAircraftsOutput, void>>;
 type SyncAircraftsResult = Promise<Result<void, SourceException>>;
 
 @ApplicationService()
 export class AircraftService {
     constructor(
+        @InjectRepository(Aircraft)
+        private readonly aircraftRepository: Repository<Aircraft>,
         private readonly aircraftSource: BaseAircraftSource,
         private readonly connection: Connection,
     ) {}
+
+    async getAircrafts(input: GetAircraftsInput): GetAircraftsResult {
+        const output = await FilterChain.create<Aircraft>(this.aircraftRepository)
+            .setPagination(qb => new PagePagination(qb, input))
+            .reduceEntities<GetAircraftsOutput>(aircrafts => {
+                return new GetAircraftsOutput(
+                    ClassTransformer.toClassObjects(AircraftDto, aircrafts),
+                );
+            });
+
+        return Ok(output);
+    }
 
     async syncAircrafts(): SyncAircraftsResult {
         Logger.log('Downloading aircrafts...');
@@ -33,9 +60,9 @@ export class AircraftService {
         let saved = 0;
 
         await this.connection.transaction(async manager => {
-            for (const item of dto) {
-                const repository = manager.getRepository(Aircraft);
+            const repository = manager.getRepository(Aircraft);
 
+            for (const item of dto) {
                 const aircraft = await repository.findOne({
                     where: {
                         _name: item.name,

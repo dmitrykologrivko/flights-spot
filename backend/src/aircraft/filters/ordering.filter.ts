@@ -12,9 +12,9 @@ export interface OrderingMeta {
     defaultOrdering?: string[];
 }
 
-export class OrderingFilter<T> extends BaseFilter<T> {
+export class OrderingFilter<E> extends BaseFilter<E> {
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
         protected readonly query: OrderingQuery,
         protected readonly meta: OrderingMeta,
     ) {
@@ -25,7 +25,7 @@ export class OrderingFilter<T> extends BaseFilter<T> {
         }
     }
 
-    filter(): SelectQueryBuilder<T> {
+    filter(): SelectQueryBuilder<E> {
         const ordering: Order[] = this.getOrdering(this.query.sortBy);
 
         if (ordering.length === 0) {

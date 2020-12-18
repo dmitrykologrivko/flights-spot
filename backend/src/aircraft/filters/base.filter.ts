@@ -1,14 +1,16 @@
 import { Repository, SelectQueryBuilder } from 'typeorm';
 
-export abstract class BaseFilter<T> {
+export abstract class BaseFilter<E> {
 
-    protected readonly queryBuilder: SelectQueryBuilder<T>;
+    protected readonly queryBuilder: SelectQueryBuilder<E>;
 
     protected constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>
     ) {
         if (queryBuilderOrRepository instanceof Repository) {
-            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder('e');
+            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder(
+                queryBuilderOrRepository.metadata.name,
+            );
         } else {
             this.queryBuilder = queryBuilderOrRepository;
         }
@@ -17,7 +19,7 @@ export abstract class BaseFilter<T> {
     /**
      * Contains filter logic of current class implementation
      */
-    abstract filter(): SelectQueryBuilder<T>;
+    abstract filter(): SelectQueryBuilder<E>;
 
     /**
      * Tries to adapt field name for using in query builder to avoid mistakes in field paths

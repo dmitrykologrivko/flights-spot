@@ -3,7 +3,7 @@ import { BaseFilter } from './base.filter';
 
 type WhereCondition = [string, ObjectLiteral];
 
-export const QUERY_WHERE_CONDITIONS = {
+export const QUERY_CONDITIONS = {
     eq: '__eq',
     ne: '__ne',
     gt: '__gt',
@@ -21,7 +21,7 @@ export const QUERY_WHERE_CONDITIONS = {
     between: '__between',
 };
 
-export const QUERY_NAME_CONDITION_REGEX = Object.values(QUERY_WHERE_CONDITIONS)
+export const QUERY_NAME_CONDITION_REGEX = Object.values(QUERY_CONDITIONS)
     .reduce((prev, current, index, arr) => {
         let newValue = `${prev}|${current}`;
 
@@ -44,9 +44,9 @@ export interface WhereMeta {
     filterFields: string[] | Record<string, string>;
 }
 
-export class WhereFilter<T> extends BaseFilter<T> {
+export class WhereFilter<E> extends BaseFilter<E> {
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
         protected readonly query: WhereQuery,
         protected readonly meta: WhereMeta,
     ) {
@@ -57,7 +57,7 @@ export class WhereFilter<T> extends BaseFilter<T> {
         }
     }
 
-    filter(): SelectQueryBuilder<T> {
+    filter(): SelectQueryBuilder<E> {
         const whereConditions: WhereCondition[] = this.getWhereConditions(this.query.where);
 
         if (whereConditions.length === 0) {
@@ -99,55 +99,55 @@ export class WhereFilter<T> extends BaseFilter<T> {
             let whereCondition: WhereCondition;
 
             switch (queryCondition) {
-                case QUERY_WHERE_CONDITIONS.eq:
+                case QUERY_CONDITIONS.eq:
                     whereCondition = [`${field} = :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.ne:
+                case QUERY_CONDITIONS.ne:
                     whereCondition = [`${field} != :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.gt:
+                case QUERY_CONDITIONS.gt:
                     whereCondition = [`${field} > :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.lt:
+                case QUERY_CONDITIONS.lt:
                     whereCondition = [`${field} < :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.gte:
+                case QUERY_CONDITIONS.gte:
                     whereCondition = [`${field} >= :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.lte:
+                case QUERY_CONDITIONS.lte:
                     whereCondition = [`${field} <= :${index}`, { [index]: queryValue }];
                     break;
-                case QUERY_WHERE_CONDITIONS.starts:
+                case QUERY_CONDITIONS.starts:
                     whereCondition = [`${field} LIKE :${index}`, { [index]: `${queryValue}%` }];
                     break;
-                case QUERY_WHERE_CONDITIONS.ends:
+                case QUERY_CONDITIONS.ends:
                     whereCondition = [`${field} LIKE :${index}`, { [index]: `%${queryValue}` }];
                     break;
-                case QUERY_WHERE_CONDITIONS.cont:
+                case QUERY_CONDITIONS.cont:
                     whereCondition = [`${field} LINE :${index}`, { [index]: `%${queryValue}%` }];
                     break;
-                case QUERY_WHERE_CONDITIONS.excl:
+                case QUERY_CONDITIONS.excl:
                     whereCondition = [`${field} NOT LINE :${index}`, { [index]: `%${queryValue}%` }];
                     break;
-                case QUERY_WHERE_CONDITIONS.in:
+                case QUERY_CONDITIONS.in:
                     whereCondition = [
                         `${field} IN (:...${index})`,
                         { [index]: queryValue.split(',').filter(value => !!value) },
                     ];
                     break;
-                case QUERY_WHERE_CONDITIONS.notin:
+                case QUERY_CONDITIONS.notin:
                     whereCondition = [
                         `${field} NOT IN (:...${index})`,
                         { [index]: queryValue.split(',').filter(value => !!value) },
                     ];
                     break;
-                case QUERY_WHERE_CONDITIONS.isnull:
+                case QUERY_CONDITIONS.isnull:
                     whereCondition = [`${field} IS NULL`, null];
                     break;
-                case QUERY_WHERE_CONDITIONS.notnull:
+                case QUERY_CONDITIONS.notnull:
                     whereCondition = [`${field} IS NOT NULL`, null];
                     break;
-                case QUERY_WHERE_CONDITIONS.between:
+                case QUERY_CONDITIONS.between:
                     const val1Index = this.getParamIndex(`${field}_val1`);
                     const val2Index = this.getParamIndex(`${field}_val2`);
                     const [val1, val2] = queryValue.split(',').filter(value => !!value);

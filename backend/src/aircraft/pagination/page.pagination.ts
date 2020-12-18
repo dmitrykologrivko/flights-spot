@@ -1,8 +1,9 @@
-import { Repository, SelectQueryBuilder } from 'typeorm'
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BasePagination } from './base.pagination';
 import { PaginatedResponse } from './paginated-response.interface';
-import { replaceUrlQueryParam } from './pagination.utils';
+import { replaceUrlQueryParam, removeUrlQueryParam } from './pagination.utils';
 
+const LIMIT_QUERY_KEY = 'limit';
 const PAGE_QUERY_KEY = 'page';
 
 export interface PagePaginationQuery {
@@ -15,7 +16,7 @@ export interface PagePaginationMeta {
     pageSize?: number;
 }
 
-export class PagePagination<T> extends BasePagination<T, PaginatedResponse<T>> {
+export class PagePagination<E> extends BasePagination<E, PaginatedResponse<E>> {
 
     protected readonly page: number;
 
@@ -24,7 +25,7 @@ export class PagePagination<T> extends BasePagination<T, PaginatedResponse<T>> {
     protected readonly offset: number;
 
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
         protected readonly query: PagePaginationQuery,
         protected readonly meta: PagePaginationMeta = { pageSize: 100 },
     ) {
@@ -40,20 +41,31 @@ export class PagePagination<T> extends BasePagination<T, PaginatedResponse<T>> {
             .skip(this.offset);
     }
 
-    async toPaginatedResponse(): Promise<PaginatedResponse<T>> {
+    async toPaginatedResponse(): Promise<PaginatedResponse<E>> {
         const [results, count] = await this.queryBuilder.getManyAndCount();
 
-        const previous = this.offset !== 0
-            ? replaceUrlQueryParam(this.query.path, PAGE_QUERY_KEY, this.page - 1)
-            : null;
-        const next = this.offset < count && this.offset + 1 < count
-            ? replaceUrlQueryParam(this.query.path, PAGE_QUERY_KEY, this.page + 1)
-            : null;
+        let next = replaceUrlQueryParam(this.query.path, LIMIT_QUERY_KEY, this.limit);
+
+        if (this.limit + this.offset < count) {
+            next = replaceUrlQueryParam(next, PAGE_QUERY_KEY, this.page + 1);
+        } else {
+            next = null;
+        }
+
+        let previous = replaceUrlQueryParam(this.query.path, LIMIT_QUERY_KEY, this.limit);
+
+        if (this.offset === 0) {
+            previous = null;
+        } else if (this.limit > this.offset || this.limit === this.offset) {
+            previous = removeUrlQueryParam(previous, PAGE_QUERY_KEY);
+        } else {
+            previous = replaceUrlQueryParam(previous, PAGE_QUERY_KEY, this.page - 1);
+        }
 
         return {
             count,
-            previous,
             next,
+            previous,
             results,
         };
     }

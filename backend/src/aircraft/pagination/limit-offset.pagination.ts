@@ -1,8 +1,9 @@
 import { Repository, SelectQueryBuilder } from 'typeorm'
 import { BasePagination } from './base.pagination';
 import { PaginatedResponse } from './paginated-response.interface';
-import { replaceUrlQueryParam } from './pagination.utils';
+import { replaceUrlQueryParam, removeUrlQueryParam } from './pagination.utils';
 
+const LIMIT_QUERY_KEY = 'limit';
 const OFFSET_QUERY_KEY = 'offset';
 
 export interface LimitOffsetPaginationQuery {
@@ -15,14 +16,14 @@ export interface LimitOffsetPaginationMeta {
     pageSize?: number;
 }
 
-export class LimitOffsetPagination<T> extends BasePagination<T, PaginatedResponse<T>> {
+export class LimitOffsetPagination<E> extends BasePagination<E, PaginatedResponse<E>> {
 
     protected readonly limit: number;
 
     protected readonly offset: number;
 
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
         protected readonly query: LimitOffsetPaginationQuery,
         protected readonly meta: LimitOffsetPaginationMeta = { pageSize: 100 },
     ) {
@@ -37,20 +38,31 @@ export class LimitOffsetPagination<T> extends BasePagination<T, PaginatedRespons
             .skip(this.offset);
     }
 
-    async toPaginatedResponse(): Promise<PaginatedResponse<T>> {
+    async toPaginatedResponse(): Promise<PaginatedResponse<E>> {
         const [results, count] = await this.queryBuilder.getManyAndCount();
 
-        const previous = this.offset !== 0
-            ? replaceUrlQueryParam(this.query.path, OFFSET_QUERY_KEY, this.limit - this.offset)
-            : null;
-        const next = this.offset < count && this.limit + this.offset < count
-            ? replaceUrlQueryParam(this.query.path, OFFSET_QUERY_KEY, this.limit + this.offset)
-            : null;
+        let next = replaceUrlQueryParam(this.query.path, LIMIT_QUERY_KEY, this.limit);
+
+        if (this.limit + this.offset < count) {
+            next = replaceUrlQueryParam(next, OFFSET_QUERY_KEY, this.limit + this.offset);
+        } else {
+            next = null;
+        }
+
+        let previous = replaceUrlQueryParam(this.query.path, LIMIT_QUERY_KEY, this.limit);
+
+        if (this.offset === 0) {
+            previous = null;
+        } else if (this.limit > this.offset || this.limit === this.offset) {
+            previous = removeUrlQueryParam(previous, OFFSET_QUERY_KEY);
+        } else {
+            previous = replaceUrlQueryParam(previous, OFFSET_QUERY_KEY, this.offset - this.limit);
+        }
 
         return {
             count,
-            previous,
             next,
+            previous,
             results,
         };
     }

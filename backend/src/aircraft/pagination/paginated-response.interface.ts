@@ -1,6 +1,8 @@
-export interface PaginatedResponse<T> {
+import { BasePaginatedResponse } from './base-paginated-response.interface';
+
+export interface PaginatedResponse<T> extends BasePaginatedResponse<T> {
     count: number;
-    previous: string;
     next: string;
+    previous: string;
     results: T[];
 }

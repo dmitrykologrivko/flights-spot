@@ -9,9 +9,9 @@ export interface SearchMeta {
     searchFields: string[];
 }
 
-export class SearchFilter<T> extends BaseFilter<T> {
+export class SearchFilter<E> extends BaseFilter<E> {
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
         protected readonly query: SearchQuery,
         protected readonly meta: SearchMeta,
     ) {
@@ -22,7 +22,7 @@ export class SearchFilter<T> extends BaseFilter<T> {
         }
     }
 
-    filter(): SelectQueryBuilder<T> {
+    filter(): SelectQueryBuilder<E> {
         if (!this.query.search) {
             return this.queryBuilder;
         }

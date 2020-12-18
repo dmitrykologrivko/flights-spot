@@ -1,20 +1,27 @@
 import { Repository, SelectQueryBuilder } from 'typeorm';
+import { BasePaginatedResponse } from './base-paginated-response.interface';
 
-export abstract class BasePagination<T, R> {
+export abstract class BasePagination<E, P extends BasePaginatedResponse<E>> {
 
-    protected readonly queryBuilder: SelectQueryBuilder<T>;
+    protected readonly queryBuilder: SelectQueryBuilder<E>;
 
     protected constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>
     ) {
         if (queryBuilderOrRepository instanceof Repository) {
-            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder('e');
+            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder(
+                queryBuilderOrRepository.metadata.name,
+            );
         } else {
             this.queryBuilder = queryBuilderOrRepository;
         }
     }
 
-    abstract paginate(): SelectQueryBuilder<T>;
+    abstract paginate(): SelectQueryBuilder<E>;
 
-    abstract async toPaginatedResponse(): Promise<R>;
+    async toPaginatedResponse(): Promise<P> {
+        return {
+            results: await this.queryBuilder.getMany(),
+        } as P;
+    };
 }

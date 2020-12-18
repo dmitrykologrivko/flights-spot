@@ -1,19 +1,22 @@
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BaseFilter } from '../filters/base.filter';
 import { BasePagination } from '../pagination/base.pagination';
+import { BasePaginatedResponse } from '../pagination/base-paginated-response.interface';
 
-export class FilterChain<T, R = unknown> {
-    protected queryBuilder: SelectQueryBuilder<T>;
+export class FilterChain<E, P extends BasePaginatedResponse<E> = BasePaginatedResponse<E>> {
+    protected queryBuilder: SelectQueryBuilder<E>;
 
-    protected filters: BaseFilter<T>[];
+    protected filters: BaseFilter<E>[];
 
-    protected pagination: BasePagination<T, R>;
+    protected pagination: BasePagination<E, P>;
 
     constructor(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
     ) {
         if (queryBuilderOrRepository instanceof Repository) {
-            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder('e');
+            this.queryBuilder = queryBuilderOrRepository.createQueryBuilder(
+                queryBuilderOrRepository.metadata.name,
+            );
         } else {
             this.queryBuilder = queryBuilderOrRepository;
         }
@@ -21,23 +24,31 @@ export class FilterChain<T, R = unknown> {
         this.filters = [];
     }
 
-    static create<T, R = unknown>(
-        queryBuilderOrRepository: Repository<T> | SelectQueryBuilder<T>,
+    static create<E, P extends BasePaginatedResponse<E> = BasePaginatedResponse<E>>(
+        queryBuilderOrRepository: Repository<E> | SelectQueryBuilder<E>,
     ) {
-        return new FilterChain<T, R>(queryBuilderOrRepository);
+        return new FilterChain<E, P>(queryBuilderOrRepository);
     }
 
-    addFilter(filterFactory: (qb: SelectQueryBuilder<T>) => BaseFilter<T>): FilterChain<T, R> {
-        this.filters.push(filterFactory(this.queryBuilder));
+    addFilter(
+        factory: (qb: SelectQueryBuilder<E>) => BaseFilter<E>,
+    ): FilterChain<E, P> {
+        this.filters.push(factory(this.queryBuilder));
         return this;
     }
 
-    setPagination(paginationFactory: (qb: SelectQueryBuilder<T>) => BasePagination<T, R>): FilterChain<T, R> {
-        this.pagination = paginationFactory(this.queryBuilder);
+    setPagination(
+        factory: (qb: SelectQueryBuilder<E>) => BasePagination<E, P>,
+    ): FilterChain<E, P> {
+        this.pagination = factory(this.queryBuilder);
         return this;
     }
 
-    filter(): SelectQueryBuilder<T> {
+    hasPagination() {
+        return !!this.pagination;
+    }
+
+    filter(): SelectQueryBuilder<E> {
         for (const filter of this.filters) {
             filter.filter();
         }
@@ -49,21 +60,21 @@ export class FilterChain<T, R = unknown> {
         return this.queryBuilder;
     }
 
-    async toEntities(): Promise<T[]> {
+    async toEntities(): Promise<E[]> {
         return await this.filter().getMany();
     }
 
-    async reduceEntities<V>(factory: (data: T[]) => V): Promise<V> {
+    async reduceEntities<U>(factory: (data: E[]) => U): Promise<U> {
         const data = await this.toEntities();
         return factory(data);
     }
 
-    async mapEntities<V>(factory: (data: T[]) => V[]): Promise<V[]> {
+    async mapEntities<U>(factory: (data: E[]) => U[]): Promise<U[]> {
         const data = await this.toEntities();
         return factory(data);
     }
 
-    async toPaginatedResponse(): Promise<R> {
+    async toPaginatedResponse(): Promise<P> {
         if (!this.pagination) {
             throw new Error('Pagination class does not set!');
         }
@@ -73,7 +84,7 @@ export class FilterChain<T, R = unknown> {
         return await this.pagination.toPaginatedResponse();
     }
 
-    async mapPaginatedResponse<V>(factory: (response: R) => V): Promise<V> {
+    async mapPaginatedResponse<U>(factory: (response: P) => U): Promise<U> {
         const response = await this.toPaginatedResponse();
         return factory(response);
     }
