@@ -9,7 +9,6 @@ import {
     Result,
     PagePagination,
     FilterChain,
-    PaginatedContainer
 } from '@nestjs-boilerplate/core';
 import { BaseAircraftSource, SourceException } from '@source/base';
 import { Aircraft } from './aircraft.entity';
