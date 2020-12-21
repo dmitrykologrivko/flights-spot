@@ -1,4 +1,4 @@
-import { ListQuery } from './crud/list-query.interface';
+import { ListQuery } from '@nestjs-boilerplate/core';
 
 export class GetAircraftsInput implements ListQuery {
     limit: number;

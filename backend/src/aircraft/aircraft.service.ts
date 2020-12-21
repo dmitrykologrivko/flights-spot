@@ -7,14 +7,15 @@ import {
     InjectRepository,
     Ok,
     Result,
+    PagePagination,
+    FilterChain,
+    PaginatedContainer
 } from '@nestjs-boilerplate/core';
 import { BaseAircraftSource, SourceException } from '@source/base';
 import { Aircraft } from './aircraft.entity';
 import { AircraftDto } from './aircraft.dto';
 import { GetAircraftsInput } from './get-aircrafts.input';
 import { GetAircraftsOutput } from './get-aircrafts.output';
-import { PagePagination } from './pagination/page.pagination';
-import { FilterChain } from './crud/filter-chain.util';
 
 type GetAircraftsResult = Promise<Result<GetAircraftsOutput, void>>;
 type SyncAircraftsResult = Promise<Result<void, SourceException>>;
@@ -31,11 +32,10 @@ export class AircraftService {
     async getAircrafts(input: GetAircraftsInput): GetAircraftsResult {
         const output = await FilterChain.create<Aircraft>(this.aircraftRepository)
             .setPagination(qb => new PagePagination(qb, input))
-            .reduceEntities<GetAircraftsOutput>(aircrafts => {
-                return new GetAircraftsOutput(
-                    ClassTransformer.toClassObjects(AircraftDto, aircrafts),
-                );
-            });
+            .mapPaginatedContainer(response => ({
+                ...response,
+                results: ClassTransformer.toClassObjects(AircraftDto, response.results),
+            })) as GetAircraftsOutput;
 
         return Ok(output);
     }
