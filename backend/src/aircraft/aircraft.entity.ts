@@ -8,9 +8,8 @@ import {
 } from '@nestjs-boilerplate/core';
 
 export const NAME_MAX_LENGTH = 128;
-export const IATA_MIN_LENGTH = 2;
-export const IATA_MAX_LENGTH = 4;
-export const ICAO_MIN_LENGTH = 2;
+export const IATA_LENGTH = 3;
+export const ICAO_MIN_LENGTH = 3;
 export const ICAO_MAX_LENGTH = 4;
 
 @Entity()
@@ -25,7 +24,7 @@ export class Aircraft extends BaseEntity {
 
     @Column({
         name: 'iata',
-        length: IATA_MAX_LENGTH,
+        length: IATA_LENGTH,
         nullable: true,
     })
     private readonly _iata: string;
@@ -80,7 +79,7 @@ export class Aircraft extends BaseEntity {
     private static validateIata(iata: string) {
         return Validate.withProperty('iata', iata, true)
             .isNotEmpty()
-            .length(IATA_MIN_LENGTH, IATA_MAX_LENGTH)
+            .length(IATA_LENGTH, IATA_LENGTH)
             .isValid();
     }
 
