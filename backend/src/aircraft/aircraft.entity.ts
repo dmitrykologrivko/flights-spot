@@ -8,8 +8,10 @@ import {
 } from '@nestjs-boilerplate/core';
 
 export const NAME_MAX_LENGTH = 128;
-export const IATA_LENGTH = 3;
-export const ICAO_LENGTH = 4;
+export const IATA_MIN_LENGTH = 2;
+export const IATA_MAX_LENGTH = 4;
+export const ICAO_MIN_LENGTH = 2;
+export const ICAO_MAX_LENGTH = 4;
 
 @Entity()
 @Unique(['_name', '_iata', '_icao'])
@@ -23,14 +25,14 @@ export class Aircraft extends BaseEntity {
 
     @Column({
         name: 'iata',
-        length: IATA_LENGTH,
+        length: IATA_MAX_LENGTH,
         nullable: true,
     })
     private readonly _iata: string;
 
     @Column({
         name: 'icao',
-        length: ICAO_LENGTH,
+        length: ICAO_MAX_LENGTH,
         nullable: true,
     })
     private readonly _icao: string;
@@ -76,27 +78,15 @@ export class Aircraft extends BaseEntity {
     }
 
     private static validateIata(iata: string) {
-        if (!iata) {
-            return Validate.withProperty('iata', iata)
-                .isValid();
-        }
-
-        return Validate.withProperty('iata', iata)
+        return Validate.withProperty('iata', iata, true)
             .isNotEmpty()
-            .minLength(IATA_LENGTH)
-            .maxLength(IATA_LENGTH)
+            .length(IATA_MIN_LENGTH, IATA_MAX_LENGTH)
             .isValid();
     }
 
     private static validateIcao(icao: string) {
-        if (!icao) {
-            return Validate.withProperty('icao', icao)
-                .isValid();
-        }
-
-        return Validate.withProperty('icao', icao)
-            .minLength(ICAO_LENGTH)
-            .maxLength(ICAO_LENGTH)
+        return Validate.withProperty('icao', icao, true)
+            .length(ICAO_MIN_LENGTH, ICAO_MAX_LENGTH)
             .isValid();
     }
 }

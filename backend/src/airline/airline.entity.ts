@@ -9,7 +9,8 @@ import {
 
 export const NAME_MAX_LENGTH = 128;
 export const CALLSIGN_MAX_LENGTH = 128;
-export const IATA_LENGTH = 2;
+export const IATA_MIN_LENGTH = 2;
+export const IATA_MAX_LENGTH = 3;
 export const ICAO_LENGTH = 3;
 export const COUNTRY_LENGTH = 2;
 
@@ -25,7 +26,7 @@ export class Airline extends BaseEntity {
 
     @Column({
         name: 'iata',
-        length: IATA_LENGTH,
+        length: IATA_MAX_LENGTH,
         nullable: true,
     })
     private readonly _iata: string;
@@ -139,38 +140,21 @@ export class Airline extends BaseEntity {
     }
 
     private static validateIata(iata: string) {
-        if (!iata) {
-            return Validate.withProperty('iata', iata)
-                .isValid();
-        }
-
-        return Validate.withProperty('iata', iata)
+        return Validate.withProperty('iata', iata, true)
             .isNotEmpty()
-            .minLength(IATA_LENGTH)
-            .maxLength(IATA_LENGTH)
+            .length(IATA_MIN_LENGTH, IATA_MAX_LENGTH)
             .isValid();
     }
 
     private static validateIcao(icao: string) {
-        if (!icao) {
-            return Validate.withProperty('icao', icao)
-                .isValid();
-        }
-
-        return Validate.withProperty('icao', icao)
+        return Validate.withProperty('icao', icao, true)
             .isNotEmpty()
-            .minLength(ICAO_LENGTH)
-            .maxLength(ICAO_LENGTH)
+            .length(ICAO_LENGTH, ICAO_LENGTH)
             .isValid();
     }
 
     private static validateCallsign(callsign: string) {
-        if (!callsign) {
-            return Validate.withProperty('callsign', callsign)
-                .isValid();
-        }
-
-        return Validate.withProperty('callsign', callsign)
+        return Validate.withProperty('callsign', callsign, true)
             .isNotEmpty()
             .maxLength(CALLSIGN_MAX_LENGTH)
             .isValid();
@@ -179,8 +163,7 @@ export class Airline extends BaseEntity {
     private static validateCountry(country: string) {
         return Validate.withProperty('country', country)
             .isNotEmpty()
-            .minLength(COUNTRY_LENGTH)
-            .maxLength(COUNTRY_LENGTH)
+            .length(COUNTRY_LENGTH, COUNTRY_LENGTH)
             .isValid();
     }
 }
