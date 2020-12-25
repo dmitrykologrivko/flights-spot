@@ -7,9 +7,6 @@ export class AirlineDto {
     name: string;
 
     @Expose()
-    alias: string;
-
-    @Expose()
     iata: string;
 
     @Expose()
