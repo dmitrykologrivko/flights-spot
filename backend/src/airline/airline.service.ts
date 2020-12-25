@@ -33,9 +33,9 @@ export class AirlineService {
         let saved = 0;
 
         await this.connection.transaction(async manager => {
-            for (const item of dto) {
-                const repository = manager.getRepository(Airline);
+            const repository = manager.getRepository(Airline);
 
+            for (const item of dto) {
                 const airline = await repository.findOne({
                     where: {
                         _name: item.name,

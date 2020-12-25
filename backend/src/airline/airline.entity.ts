@@ -14,7 +14,7 @@ export const ICAO_LENGTH = 3;
 export const COUNTRY_LENGTH = 2;
 
 @Entity()
-@Unique(['_name', '_iata', '_icao', '_callsign', '_country'])
+@Unique(['_name', '_iata', '_icao'])
 export class Airline extends BaseEntity {
 
     @Column({

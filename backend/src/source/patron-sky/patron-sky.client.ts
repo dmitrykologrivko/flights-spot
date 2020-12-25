@@ -5,7 +5,7 @@ import { PatronSkyApiException } from './patron-sky-api.exception';
 
 const AIRCRAFTS_API_PATH = 'api/aircrafts';
 const AIRLINES_API_PATH = 'api/airlines';
-const AIRPORTS_API_PATH = 'api/airportss';
+const AIRPORTS_API_PATH = 'api/airports';
 const FLIGHTS_API_PATH = 'api/flights/number';
 
 interface Aircraft {

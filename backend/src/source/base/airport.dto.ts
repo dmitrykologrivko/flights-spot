@@ -25,12 +25,6 @@ export class AirportDto {
     longitude: number;
 
     @Expose()
-    altitude: string;
-
-    @Expose()
-    timezone: number;
-
-    @Expose()
-    tzDatabase: string;
+    utc: number;
 
 }
