@@ -67,8 +67,6 @@ export class AirlineService {
                         _name: item.name,
                         _iata: item.iata,
                         _icao: item.icao,
-                        _callsign: item.callsign,
-                        _country: item.country,
                     },
                 });
 
