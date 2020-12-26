@@ -31,9 +31,7 @@ interface Airport {
     icao: string;
     latitude: number;
     longitude: number;
-    altitude: number;
-    timezone: number;
-    tzDatabase: string;
+    utc: number;
 }
 
 interface FlightAirportMovement {

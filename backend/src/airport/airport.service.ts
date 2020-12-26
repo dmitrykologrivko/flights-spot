@@ -1,17 +1,43 @@
-import { Connection } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { ApplicationService, Result, Ok, Err } from '@nestjs-boilerplate/core';
+import {
+    ApplicationService,
+    ClassTransformer,
+    Err,
+    InjectRepository,
+    Ok,
+    Result,
+    PagePagination,
+    FilterChain,
+} from '@nestjs-boilerplate/core';
 import { BaseAirportSource, SourceException } from '@source/base';
 import { Airport } from './airport.entity';
+import { AirportDto } from './airport.dto';
+import { GetAirportInput } from './get-airport.input';
+import { GetAirportOutput } from './get-airport.output';
 
+type GetAirportsResult = Promise<Result<GetAirportOutput, void>>;
 type SyncAirportsResult = Promise<Result<void, SourceException>>;
 
 @ApplicationService()
 export class AirportService {
     constructor(
-       private readonly airportSource: BaseAirportSource,
-       private readonly connection: Connection,
+        @InjectRepository(Airport)
+        private readonly airportRepository: Repository<Airport>,
+        private readonly airportSource: BaseAirportSource,
+        private readonly connection: Connection,
     ) {}
+
+    async getAirports(input: GetAirportInput): GetAirportsResult {
+        const output = await FilterChain.create<Airport>(this.airportRepository)
+            .setPagination(qb => new PagePagination(qb, input))
+            .mapPaginatedContainer(response => ({
+                ...response,
+                results: ClassTransformer.toClassObjects(AirportDto, response.results),
+            })) as GetAirportOutput;
+
+        return Ok(output);
+    }
 
     async syncAirports(): SyncAirportsResult {
         Logger.log('Downloading airports...');
