@@ -4,7 +4,7 @@ import { AuthModule } from '@nestjs-boilerplate/auth';
 import { AircraftModule } from '@aircraft/aircraft.module';
 import { AirlineModule } from '@airline/airline.module';
 import { AirportModule } from '@airport/airport.module';
-import { SourceModule } from '@source/source.module';
+import { FlightModule } from '@flight/flight.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import appConfig from './app.config';
@@ -18,7 +18,7 @@ import appConfig from './app.config';
       AircraftModule,
       AirlineModule,
       AirportModule,
-      SourceModule,
+      FlightModule,
   ],
   controllers: [AppController],
   providers: [AppService],

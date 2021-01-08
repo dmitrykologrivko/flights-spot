@@ -15,6 +15,7 @@
         "@aircraft/*": ["src/aircraft/*"],
         "@airline/*": ["src/airline/*"],
         "@airport/*": ["src/airport/*"],
+        "@flight/*": ["src/flight/*"],
         "@source/*": ["src/source/*"]
     }
   },
