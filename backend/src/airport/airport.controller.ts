@@ -1,9 +1,11 @@
-import { Get } from '@nestjs/common';
+import { Get, UseFilters } from '@nestjs/common';
 import { ApiController, ListFilter } from '@nestjs-boilerplate/core';
 import { JwtAuthGuard } from '@nestjs-boilerplate/auth';
+import { SourceExceptionFilter } from '@source/base';
 import { AirportService } from './airport.service';
 import { GetAirportInput } from './get-airport.input';
 
+@UseFilters(SourceExceptionFilter)
 @ApiController('airports')
 export class AirlineController {
     constructor(

@@ -1,7 +1,8 @@
 import { Exclude, Expose } from 'class-transformer';
+import { BaseEntityDto } from '@nestjs-boilerplate/core';
 
 @Exclude()
-export class FlightAircraftDto {
+export class FlightAircraftDto extends BaseEntityDto {
 
     @Expose()
     name: string;
@@ -11,8 +12,5 @@ export class FlightAircraftDto {
 
     @Expose()
     icao: string;
-
-    @Expose()
-    reg: string;
 
 }

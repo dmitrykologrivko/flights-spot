@@ -1,7 +1,7 @@
 import { Column, Unique } from 'typeorm';
 import {
     Entity,
-    BaseEntity,
+    BaseTypeormEntity,
     Validate,
     ValidationContainerException,
     Result
@@ -15,7 +15,7 @@ export const ICAO_LENGTH = 4;
 
 @Entity()
 @Unique(['_name', '_iata', '_icao'])
-export class Airport extends BaseEntity {
+export class Airport extends BaseTypeormEntity {
 
     @Column({
         name: 'name',
@@ -114,6 +114,38 @@ export class Airport extends BaseEntity {
             longitude,
             utc,
         ));
+    }
+
+    get name(): string {
+        return this._name;
+    }
+
+    get city(): string {
+        return this._city;
+    }
+
+    get country(): string {
+        return this._country;
+    }
+
+    get iata(): string {
+        return this._iata;
+    }
+
+    get icao(): string {
+        return this._icao;
+    }
+
+    get latitude(): number {
+        return this._latitude;
+    }
+
+    get longitude(): number {
+        return this._longitude;
+    }
+
+    get utc(): number {
+        return this._utc;
     }
 
     private static validateName(name: string) {

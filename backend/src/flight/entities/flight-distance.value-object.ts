@@ -1,13 +1,11 @@
 import { Column } from 'typeorm';
 import {
-    ValueObject,
     BaseValueObject,
     Validate,
     Result,
     ValidationContainerException,
 } from '@nestjs-boilerplate/core';
 
-@ValueObject()
 export class FlightDistance extends BaseValueObject {
 
     @Column({
@@ -57,23 +55,40 @@ export class FlightDistance extends BaseValueObject {
         mile: number,
         nm: number,
     ): Result<FlightDistance, ValidationContainerException> {
-        const validateResult = Validate.withResults([
+        return Validate.withResults([
             FlightDistance.validateFeet(feet),
             FlightDistance.validateKm(km),
             FlightDistance.validateMeter(meter),
             FlightDistance.validateMile(mile),
             FlightDistance.validateNm(nm),
-        ]);
-
-        return validateResult.map(() => {
-            return new FlightDistance(
+        ]).map(() => (
+            new FlightDistance(
                 feet,
                 km,
                 meter,
                 mile,
                 nm,
             )
-        });
+        ));
+    }
+
+    get feet(): number {
+        return this._feet;
+    }
+    get km(): number {
+        return this._km;
+    }
+
+    get meter(): number {
+        return this._meter;
+    }
+
+    get mile(): number {
+        return this._mile;
+    }
+
+    get nm(): number {
+        return this._nm;
     }
 
     private static validateFeet(feet: number) {

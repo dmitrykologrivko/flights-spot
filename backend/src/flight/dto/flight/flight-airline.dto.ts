@@ -2,24 +2,24 @@ import { Exclude, Expose } from 'class-transformer';
 import { BaseEntityDto } from '@nestjs-boilerplate/core';
 
 @Exclude()
-export class AirlineDto extends BaseEntityDto {
+export class FlightAirlineDto extends BaseEntityDto {
 
-    @Expose({ name: '_name' })
+    @Expose()
     name: string;
 
-    @Expose({ name: '_iata' })
+    @Expose()
     iata: string;
 
-    @Expose({ name: '_icao' })
+    @Expose()
     icao: string;
 
-    @Expose({ name: '_callsign' })
+    @Expose()
     callsign: string;
 
-    @Expose({ name: '_country' })
+    @Expose()
     country: string;
 
-    @Expose({ name: '_active' })
+    @Expose()
     active: boolean;
 
 }

@@ -26,8 +26,8 @@
     "test:e2e": "jest --config test/jest-e2e.json --runInBand"
   },
   "dependencies": {
-    "@nestjs-boilerplate/auth": "0.1.0-alpha.55",
-    "@nestjs-boilerplate/core": "0.1.0-alpha.55",
+    "@nestjs-boilerplate/auth": "0.1.0-alpha.107",
+    "@nestjs-boilerplate/core": "0.1.0-alpha.107",
     "@nestjs/common": "^7.4.4",
     "@nestjs/config": "0.5.0",
     "@nestjs/core": "^7.4.4",
@@ -36,7 +36,7 @@
     "@nestjs/platform-express": "^7.4.4",
     "@nestjs/typeorm": "^7.1.4",
     "class-transformer": "^0.3.1",
-    "class-validator": "^0.12.2",
+    "class-validator": "^0.13.1",
     "i18n-iso-countries": "^6.1.0",
     "node-fetch": "^2.6.1",
     "passport": "^0.4.1",

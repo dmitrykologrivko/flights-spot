@@ -13,3 +13,5 @@ export * from './flight-airline.dto';
 export * from './flight-airport.dto';
 export * from './flight-airport-movement.dto';
 export * from './flight-distance.dto';
+export * from './source-exception.filter';
+export * from './airport-code.enum';

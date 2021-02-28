@@ -1,7 +1,7 @@
 import { Column, Unique } from 'typeorm';
 import {
     Entity,
-    BaseEntity,
+    BaseTypeormEntity,
     Validate,
     ValidationContainerException,
     Result
@@ -14,7 +14,7 @@ export const ICAO_MAX_LENGTH = 4;
 
 @Entity()
 @Unique(['_name', '_iata', '_icao'])
-export class Aircraft extends BaseEntity {
+export class Aircraft extends BaseTypeormEntity {
 
     @Column({
         name: 'name',

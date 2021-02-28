@@ -17,7 +17,7 @@ export class PatronSkyAircraftsSource extends BaseAircraftSource {
 
     async getAircrafts(): Promise<Result<AircraftDto[], SourceException>> {
         return AsyncResult.from(this.client.getAircrafts())
-            .map(async aircrafts => ClassTransformer.toClassObjects(AircraftDto, aircrafts))
+            .map(aircrafts => ClassTransformer.toClassObjects(AircraftDto, aircrafts))
             .map_err(error => new SourceException(error.stack))
             .toResult();
     }

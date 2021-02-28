@@ -1,8 +1,8 @@
 import { Exclude, Expose } from 'class-transformer';
-import { EntityDto } from '@nestjs-boilerplate/core';
+import { BaseEntityDto } from '@nestjs-boilerplate/core';
 
 @Exclude()
-export class AirportDto extends EntityDto {
+export class AirportDto extends BaseEntityDto {
 
     @Expose({ name: '_name' })
     name: string;

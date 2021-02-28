@@ -1,7 +1,7 @@
 import { Column, Unique } from 'typeorm';
 import {
     Entity,
-    BaseEntity,
+    BaseTypeormEntity,
     Validate,
     ValidationContainerException,
     Result
@@ -15,7 +15,7 @@ export const COUNTRY_LENGTH = 2;
 
 @Entity()
 @Unique(['_name', '_iata', '_icao'])
-export class Airline extends BaseEntity {
+export class Airline extends BaseTypeormEntity {
 
     @Column({
         name: 'name',

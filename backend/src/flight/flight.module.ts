@@ -1,21 +1,29 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@nestjs-boilerplate/core';
-import { BaseFlight } from './entities/base-flight.entity';
-import { GeneralFlight } from './entities/general-flight.entity';
-import { UserFlight } from './entities/user-flight.entity';
-import { FlightAirportMovement } from './entities/flight-airport-movement.value-object';
-import { FlightDistance } from './entities/flight-distance.value-object';
-
-const entities = [
-    BaseFlight,
-    GeneralFlight,
-    UserFlight,
-    FlightAirportMovement,
-    FlightDistance,
-];
+import { AuthModule } from '@nestjs-boilerplate/auth';
+import { AircraftModule } from '@aircraft/aircraft.module';
+import { AirlineModule } from '@airline/airline.module';
+import { AirportModule } from '@airport/airport.module';
+import { SourceModule } from '@source/source.module';
+import { Flight } from './entities/flight.entity';
+import { FlightTicket } from './entities/flight-ticket.value-object';
+import { FlightService } from './services/flight.service';
+import { FlightController } from './controllers/flight.controller';
 
 @Module({
-    imports: [DatabaseModule.withEntities(entities)],
+    imports: [
+        DatabaseModule.withEntities([
+            Flight,
+            FlightTicket,
+        ]),
+        AuthModule,
+        AircraftModule,
+        AirlineModule,
+        AirportModule,
+        SourceModule,
+    ],
+    providers: [FlightService],
+    controllers: [FlightController],
     exports: [DatabaseModule],
 })
 export class FlightModule {}
