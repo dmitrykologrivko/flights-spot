@@ -393,7 +393,7 @@ export class FlightService extends BaseCrudService<Flight,
 
     protected mapDtoOutput(
         entity: Flight,
-        wrapper?: InputWrapper<void, RetrieveFlightInput, UserFlightDto, UserFlightDto, DestroyFlightInput>,
+        wrapper?: InputWrapper<never, RetrieveFlightInput, UserFlightDto, UserFlightDto, DestroyFlightInput>,
     ): UserFlightDto {
         return this.mapUserFlightDto(entity, (wrapper.input as any).userId);
     }
