@@ -1,8 +1,8 @@
 import { Result } from '@nestjs-boilerplate/core';
 import { FlightDto } from './flight.dto';
 import { FlightDistanceDto } from './flight-distance.dto';
-import { SourceException } from './source.exception';
 import { AirportCodeType } from './airport-code.enum';
+import { SourceException } from './source.exception';
 
 export abstract class BaseFlightSource {
 

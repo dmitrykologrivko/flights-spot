@@ -1,7 +1,6 @@
 import {
     InfrastructureService,
     ClassTransformer,
-    AsyncResult,
     Result,
 } from '@nestjs-boilerplate/core';
 import { BaseAircraftSource } from '../base/base-aircraft.source';
@@ -16,9 +15,8 @@ export class PatronSkyAircraftsSource extends BaseAircraftSource {
     }
 
     async getAircrafts(): Promise<Result<AircraftDto[], SourceException>> {
-        return AsyncResult.from(this.client.getAircrafts())
+        return (await this.client.getAircrafts())
             .map(aircrafts => ClassTransformer.toClassObjects(AircraftDto, aircrafts))
-            .map_err(error => new SourceException(error.stack))
-            .toResult();
+            .mapErr(error => new SourceException(error.stack));
     }
 }

@@ -18,7 +18,6 @@ import {
 import { Aircraft } from '@aircraft/aircraft.entity';
 import { Airline } from '@airline/airline.entity';
 import { FlightStatusEnum } from '@source/base/flight-status.enum';
-import { FlightAirportMovement } from './flight-airport-movement.value-object';
 import { FlightArrivalAirportMovement } from './flight-arrival-airport-movement.value-object';
 import { FlightDepartureAirportMovement } from './flight-departure-airport-movement.value-object';
 import { FlightDistance } from './flight-distance.value-object';
@@ -411,7 +410,12 @@ export class Flight extends BaseRootTypeormEntity {
             .custom(
                 'length',
                 'Custom flight must have one ticket',
-                (value: FlightTicket[]) => type === FlightType.CUSTOM && value.length === 1,
+                (value: FlightTicket[]) => {
+                    if (type === FlightType.GENERAL) {
+                        return true;
+                    }
+                    return type === FlightType.CUSTOM && value.length === 1;
+                },
             )
             .isValid();
     }
