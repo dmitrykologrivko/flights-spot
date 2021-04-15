@@ -11,22 +11,22 @@ import { PatronSkyFlightsSource } from './patron-sky/patron-sky-flights.source';
 
 const aircraftSourceProvider = {
     provide: BaseAircraftSource,
-    useClass: PatronSkyAircraftsSource,
+    useExisting: PatronSkyAircraftsSource,
 };
 
 const airlineSourceProvider = {
     provide: BaseAirlineSource,
-    useClass: PatronSkyAirlineSource,
+    useExisting: PatronSkyAirlineSource,
 };
 
 const airportSourceProvider = {
     provide: BaseAirportSource,
-    useClass: PatronSkyAirportsSource,
+    useExisting: PatronSkyAirportsSource,
 };
 
 const flightSourceProvider = {
     provide: BaseFlightSource,
-    useClass: PatronSkyFlightsSource,
+    useExisting: PatronSkyFlightsSource,
 };
 
 @Module({
