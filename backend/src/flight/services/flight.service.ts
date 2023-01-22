@@ -1,6 +1,6 @@
 import {
+    DataSource,
     QueryRunner,
-    Repository,
     SelectQueryBuilder,
     Like,
     Equal,
@@ -62,12 +62,11 @@ export class FlightService extends BaseCrudService<Flight,
     PaginatedContainer<FlightDto>> {
 
     constructor(
-        @InjectRepository(Flight)
-        private readonly flightRepository: Repository<Flight>,
+        protected dataSource: DataSource,
         private readonly flightSource: BaseFlightSource,
     ) {
         super(
-            flightRepository,
+            dataSource,
             {
                 entityCls: Flight,
                 listOutputCls: FlightDto,
@@ -131,8 +130,8 @@ export class FlightService extends BaseCrudService<Flight,
 
             // Create flight ticket
             FlightTicket.create(
-                input.payload.ticket.seat,
-                input.payload.ticket.note,
+                input.payload.ticket?.seat,
+                input.payload.ticket?.note,
             ).mapErr(() => new IncompleteFlightException()),
         ]).proceedAsync(async values => {
             const aircraft = await queryRunner.manager.findOneBy(Aircraft, { id: Equal(input.payload.aircraftId) });
@@ -244,10 +243,7 @@ export class FlightService extends BaseCrudService<Flight,
 
                 const sourceFlight: SourceFlightDto = flights[0];
 
-                // TODO find better way to get manager
-                const manager = this.repository.manager;
-
-                const aircraft = await manager.findOne(Aircraft,{
+                const aircraft = await this.dataSource.manager.findOne(Aircraft,{
                     where: [
                         { iata: sourceFlight.aircraft.iata },
                         { icao: sourceFlight.aircraft.icao },
@@ -255,7 +251,7 @@ export class FlightService extends BaseCrudService<Flight,
                     ]
                 });
 
-                const airline = await manager.findOne(Airline,{
+                const airline = await this.dataSource.manager.findOne(Airline,{
                     where: [
                         { iata: sourceFlight.airline.iata },
                         { icao: sourceFlight.airline.icao },
@@ -263,7 +259,7 @@ export class FlightService extends BaseCrudService<Flight,
                     ]
                 });
 
-                const departureAirport = await manager.findOne(Airport,{
+                const departureAirport = await this.dataSource.manager.findOne(Airport,{
                     where: [
                         { iata: sourceFlight.departure.airport.iata },
                         { icao: sourceFlight.departure.airport.icao },
@@ -271,7 +267,7 @@ export class FlightService extends BaseCrudService<Flight,
                     ]
                 });
 
-                const arrivalAirport = await manager.findOne(Airport,{
+                const arrivalAirport = await this.dataSource.manager.findOne(Airport,{
                     where: [
                         { iata: sourceFlight.arrival.airport.iata },
                         { icao: sourceFlight.arrival.airport.icao },

@@ -2,6 +2,7 @@ import {
     IsNotEmpty,
     MaxLength,
     ValidateNested,
+    IsOptional,
 } from 'class-validator';
 import { Exclude, Expose, Type } from 'class-transformer';
 import {
@@ -84,9 +85,8 @@ export class FlightDto extends BaseTimeStampedEntityDto {
     @Expose()
     status: FlightStatus;
 
-    @PartialUpdate()
+    @IsOptional({ always: true })
     @ValidateNested({ always: true })
-    @IsNotEmpty({ always: true })
     @Type(() => FlightTicketDto)
     @Expose()
     ticket: FlightTicketDto;
