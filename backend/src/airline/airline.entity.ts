@@ -14,49 +14,43 @@ export const ICAO_LENGTH = 3;
 export const COUNTRY_LENGTH = 2;
 
 @Entity()
-@Unique(['_name', '_iata', '_icao'])
+@Unique(['name', 'iata', 'icao'])
 export class Airline extends BaseTypeormEntity {
 
     @Column({
-        name: 'name',
         length: NAME_MAX_LENGTH,
     })
-    private readonly _name: string;
+    name: string;
 
     @Column({
-        name: 'iata',
         length: IATA_LENGTH,
         nullable: true,
     })
-    private readonly _iata: string;
+    iata: string;
 
     @Column({
-        name: 'icao',
         length: ICAO_LENGTH,
         nullable: true,
     })
-    private readonly _icao: string;
+    icao: string;
 
     @Column({
-        name: 'callsign',
         length: CALLSIGN_MAX_LENGTH,
         nullable: true,
     })
-    private readonly _callsign: string;
+    callsign: string;
 
     @Column({
-        name: 'country',
         length: COUNTRY_LENGTH,
     })
-    private readonly _country: string;
+    country: string;
 
     @Column({
-        name: 'active',
         default: true
     })
-    private _active: boolean;
+    active: boolean;
 
-    private constructor(
+    constructor(
         name: string,
         iata: string,
         icao: string,
@@ -65,12 +59,12 @@ export class Airline extends BaseTypeormEntity {
         active: boolean,
     ) {
         super();
-        this._name = name;
-        this._iata = iata;
-        this._icao = icao;
-        this._callsign = callsign;
-        this._country = country;
-        this._active = active;
+        this.name = name;
+        this.iata = iata;
+        this.icao = icao;
+        this.callsign = callsign;
+        this.country = country;
+        this.active = active;
     }
 
     static create(
@@ -100,35 +94,11 @@ export class Airline extends BaseTypeormEntity {
     }
 
     activateAirline() {
-        this._active = true;
+        this.active = true;
     }
 
     deactivateAirline() {
-        this._active = false;
-    }
-
-    get name(): string {
-        return this._name;
-    }
-
-    get iata(): string {
-        return this._iata;
-    }
-
-    get icao(): string {
-        return this._icao;
-    }
-
-    get callsign(): string {
-        return this._callsign;
-    }
-
-    get country(): string {
-        return this._country;
-    }
-
-    get active(): boolean {
-        return this._active;
+        this.active = false;
     }
 
     private static validateName(name: string) {
@@ -139,21 +109,24 @@ export class Airline extends BaseTypeormEntity {
     }
 
     private static validateIata(iata: string) {
-        return Validate.withProperty('iata', iata, true)
+        return Validate.withProperty('iata', iata)
+            .isOptional()
             .isNotEmpty()
             .length(IATA_LENGTH, IATA_LENGTH)
             .isValid();
     }
 
     private static validateIcao(icao: string) {
-        return Validate.withProperty('icao', icao, true)
+        return Validate.withProperty('icao', icao)
+            .isOptional()
             .isNotEmpty()
             .length(ICAO_LENGTH, ICAO_LENGTH)
             .isValid();
     }
 
     private static validateCallsign(callsign: string) {
-        return Validate.withProperty('callsign', callsign, true)
+        return Validate.withProperty('callsign', callsign)
+            .isOptional()
             .isNotEmpty()
             .maxLength(CALLSIGN_MAX_LENGTH)
             .isValid();

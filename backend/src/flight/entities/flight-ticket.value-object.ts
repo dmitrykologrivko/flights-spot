@@ -1,90 +1,52 @@
 import { Column, ManyToOne, JoinColumn } from 'typeorm';
 import {
-    Element,
-    BaseElement,
-    getTargetName,
+    BaseValueObject,
     Result,
     Validate,
     ValidationContainerException,
 } from '@nestjs-boilerplate/core';
-import { User } from '@nestjs-boilerplate/auth';
-import { Flight } from './flight.entity';
 
-@Element({ parent: type => Flight })
-export class FlightTicket extends BaseElement<Flight> {
-
-    @ManyToOne(getTargetName(User), { eager: true })
-    @JoinColumn()
-    private readonly _passenger: User;
+export class FlightTicket extends BaseValueObject {
 
     @Column({
-        name: 'seat',
         nullable: true,
     })
-    private readonly _seat: string;
+    seat: string;
 
     @Column({
-        name: 'note',
         nullable: true,
     })
-    private readonly _note: string;
+    note: string;
 
-    private constructor(
-        passenger: User,
-        seat: string,
-        note: string,
-    ) {
+    constructor(seat: string, note: string) {
         super();
-        this._passenger = passenger;
-        this._seat = seat;
-        this._note = note;
+        this.seat = seat;
+        this.note = note;
     }
 
     static create(
-        passenger: User,
         seat: string,
         note: string,
     ): Result<FlightTicket, ValidationContainerException> {
         const validateResult = Validate.withResults([
-            FlightTicket.validatePassenger(passenger),
             FlightTicket.validateSeat(seat),
             FlightTicket.validateNote(note),
         ]);
 
         return validateResult.map(() => (
-            new FlightTicket(
-                passenger,
-                seat,
-                note,
-            )
+            new FlightTicket(seat, note)
         ));
     }
 
-    get passenger(): User {
-        return this._passenger;
-    }
-
-    get seat(): string {
-        return this._seat;
-    }
-
-    get note(): string {
-        return this._note;
-    }
-
-    private static validatePassenger(passenger: User) {
-        return Validate.withProperty('passenger', passenger)
-            .isNotEmpty()
-            .isValid();
-    }
-
     private static validateSeat(seat: string) {
-        return Validate.withProperty('seat', seat, true)
+        return Validate.withProperty('seat', seat)
+            .isOptional()
             .isValid();
     }
 
     private static validateNote(note: string) {
-        return Validate.withProperty('note', note, true)
+        return Validate.withProperty('note', note)
+            .isOptional()
             .isValid();
     }
 }

@@ -8,32 +8,22 @@ import {
 
 export class FlightDistance extends BaseValueObject {
 
-    @Column({
-        name: 'feet',
-    })
-    private readonly _feet: number;
+    @Column()
+    feet: number;
 
-    @Column({
-        name: 'km',
-    })
-    private readonly _km: number;
+    @Column()
+    km: number;
 
-    @Column({
-        name: 'meter',
-    })
-    private readonly _meter: number;
+    @Column()
+    meter: number;
 
-    @Column({
-        name: 'mile',
-    })
-    private readonly _mile: number;
+    @Column()
+    mile: number;
 
-    @Column({
-        name: 'nm',
-    })
-    private readonly _nm: number;
+    @Column()
+    nm: number;
 
-    private constructor(
+    constructor(
         feet: number,
         km: number,
         meter: number,
@@ -41,11 +31,11 @@ export class FlightDistance extends BaseValueObject {
         nm: number,
     ) {
         super();
-        this._feet = feet;
-        this._km = km;
-        this._meter = meter;
-        this._mile = mile;
-        this._nm = nm;
+        this.feet = feet;
+        this.km = km;
+        this.meter = meter;
+        this.mile = mile;
+        this.nm = nm;
     }
 
     static create(
@@ -70,25 +60,6 @@ export class FlightDistance extends BaseValueObject {
                 nm,
             )
         ));
-    }
-
-    get feet(): number {
-        return this._feet;
-    }
-    get km(): number {
-        return this._km;
-    }
-
-    get meter(): number {
-        return this._meter;
-    }
-
-    get mile(): number {
-        return this._mile;
-    }
-
-    get nm(): number {
-        return this._nm;
     }
 
     private static validateFeet(feet: number) {

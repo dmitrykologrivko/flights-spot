@@ -4,6 +4,6 @@ import { SourceException } from './source.exception';
 
 export abstract class BaseAircraftSource {
 
-    abstract async getAircrafts(): Promise<Result<AircraftDto[], SourceException>>;
+    abstract getAircrafts(): Promise<Result<AircraftDto[], SourceException>>;
 
 }

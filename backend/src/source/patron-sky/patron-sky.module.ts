@@ -5,14 +5,15 @@ import { PatronSkyAircraftsSource } from './patron-sky-aircrafts.source';
 import { PatronSkyAirlineSource } from './patron-sky-airline.source';
 import { PatronSkyAirportsSource } from './patron-sky-airports.source';
 import { PatronSkyFlightsSource } from './patron-sky-flights.source';
-import { PATRON_SKY_HOST_PROPERTY } from './patron-sky.properties';
+import { PATRON_SKY_HOST_PROPERTY, PATRON_SKY_TOKEN_PROPERTY } from './patron-sky.properties';
 import patronSkyConfig from './patron-sky.config';
 
 const patronSkyClientProvider = {
     provide: PatronSkyClient,
     useFactory: (config: PropertyConfigService) => {
         const apiUrl = config.get(PATRON_SKY_HOST_PROPERTY);
-        return new PatronSkyClient(apiUrl);
+        const token = config.get(PATRON_SKY_TOKEN_PROPERTY);
+        return new PatronSkyClient(apiUrl, token);
     },
     inject: [PropertyConfigService],
 };

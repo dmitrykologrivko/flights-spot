@@ -10,8 +10,8 @@ export class AircraftsCommand {
     async syncAircrafts() {
        const result = await this.aircraftService.syncAircrafts();
 
-       if (result.is_err()) {
-           Logger.error(result.unwrap_err().stack);
+       if (result.isErr()) {
+           Logger.error(result.unwrapErr().stack);
        }
     }
 }

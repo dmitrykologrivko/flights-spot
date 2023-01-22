@@ -10,8 +10,8 @@ export class AirportCommand {
     async syncAirports() {
         const result = await this.airportService.syncAirports();
 
-        if (result.is_err()) {
-            Logger.error(result.unwrap_err().stack);
+        if (result.isErr()) {
+            Logger.error(result.unwrapErr().stack);
         }
     }
 }

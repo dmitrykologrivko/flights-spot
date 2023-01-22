@@ -1,7 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
-import { Exclude, Expose, Type } from 'class-transformer';
-import { ReadOnly, WriteOnly } from '@nestjs-boilerplate/core';
-import { FlightPassengerDto } from './flight-passenger.dto';
+import { Exclude, Expose } from 'class-transformer';
 
 @Exclude()
 export class FlightTicketDto {
@@ -11,13 +8,5 @@ export class FlightTicketDto {
 
     @Expose()
     note: string;
-
-    @Type(() => FlightPassengerDto)
-    @ReadOnly()
-    user: FlightPassengerDto;
-
-    @IsNotEmpty({ always: true })
-    @WriteOnly()
-    userId: number;
 
 }

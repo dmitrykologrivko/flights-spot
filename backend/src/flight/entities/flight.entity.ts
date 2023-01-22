@@ -4,20 +4,23 @@ import {
     JoinColumn,
 } from 'typeorm';
 import {
-    any,
     Entity,
     BaseRootTypeormEntity,
     Embedded,
-    ElementCollection,
     Validate,
     ValidationContainerException,
     ValidationResult,
     Result,
     ok,
+    err,
+    getTargetName,
 } from '@nestjs-boilerplate/core';
+import { User } from '@nestjs-boilerplate/user';
 import { Aircraft } from '@aircraft/aircraft.entity';
 import { Airline } from '@airline/airline.entity';
+import { Airport } from '@airport/airport.entity';
 import { FlightStatusEnum } from '@source/base/flight-status.enum';
+import { IncompleteFlightException } from '../exceptions/incomplete-flight.exception';
 import { FlightArrivalAirportMovement } from './flight-arrival-airport-movement.value-object';
 import { FlightDepartureAirportMovement } from './flight-departure-airport-movement.value-object';
 import { FlightDistance } from './flight-distance.value-object';
@@ -25,9 +28,11 @@ import { FlightTicket } from './flight-ticket.value-object';
 
 export type FlightStatus = FlightStatusEnum;
 
-export enum FlightType {
-    GENERAL = 'general',
-    CUSTOM = 'custom',
+export interface FlightDistanceProvider {
+    getFlightDistance(
+        arrivalAirport: Airport,
+        departureAirport: Airport
+    ): Promise<Result<FlightDistance, IncompleteFlightException>>;
 }
 
 export const AIRCRAFT_REG_MAX_LENGTH = 128;
@@ -37,55 +42,60 @@ export const CALL_SIGN_MAX_LENGTH = 128;
 @Entity()
 export class Flight extends BaseRootTypeormEntity {
 
-    @ManyToOne(type => Aircraft, { eager: true })
+    @ManyToOne(
+        type => Aircraft,
+        { nullable: false, eager: true }
+    )
     @JoinColumn()
-    private _aircraft: Aircraft;
+    aircraft: Aircraft;
 
     @Column({
-        name: 'aircraftReg',
         length: AIRCRAFT_REG_MAX_LENGTH,
+        nullable: true,
     })
-    private _aircraftReg: string;
+    aircraftReg: string;
 
-    @ManyToOne(type => Airline, { eager: true })
+    @ManyToOne(
+        type => Airline,
+        { nullable: false, eager: true }
+    )
     @JoinColumn()
-    private _airline: Airline;
+    airline: Airline;
 
     @Embedded(type => FlightArrivalAirportMovement)
-    private _arrival: FlightArrivalAirportMovement;
+    arrival: FlightArrivalAirportMovement;
 
     @Embedded(type => FlightDepartureAirportMovement)
-    private _departure: FlightDepartureAirportMovement;
+    departure: FlightDepartureAirportMovement;
 
     @Embedded(type => FlightDistance)
-    private _distance: FlightDistance;
+    distance: FlightDistance;
 
     @Column({
-        name: 'number',
         length: NUMBER_MAX_LENGTH,
     })
-    private _number: string;
+    number: string;
 
     @Column({
-        name: 'callSign',
         length: CALL_SIGN_MAX_LENGTH,
+        nullable: true,
     })
-    private _callSign: string;
+    callSign: string;
 
     @Column({
-        name: 'status',
         type: 'text',
     })
-    private _status: FlightStatus;
+    status: FlightStatus;
 
-    @Column({
-        name: 'type',
-        type: 'text',
-    })
-    private _type: FlightType;
+    @Embedded(type => FlightTicket)
+    ticket: FlightTicket;
 
-    @ElementCollection(type => FlightTicket)
-    private _tickets: FlightTicket[];
+    @ManyToOne(
+        getTargetName(User),
+        { nullable: false, eager: true }
+    )
+    @JoinColumn()
+    user: User;
 
     constructor(
         aircraft: Aircraft,
@@ -97,29 +107,49 @@ export class Flight extends BaseRootTypeormEntity {
         number: string,
         callSign: string,
         status: FlightStatusEnum,
-        type: FlightType,
-        tickets?: FlightTicket[],
+        ticket: FlightTicket,
+        user: User,
     ) {
         super();
+        this.aircraft = aircraft;
+        this.aircraftReg = aircraftReg;
+        this.airline = airline;
+        this.arrival = arrival;
+        this.departure = departure;
+        this.distance = distance;
+        this.number = number;
+        this.callSign = callSign;
+        this.status = status;
+        this.ticket = ticket;
+        this.user = user;
+    }
 
-        // Typeorm requires empty constructor
-        if (!any([
-            aircraft,
-            aircraftReg,
-            airline,
-            arrival,
-            departure,
-            distance,
-            number,
-            callSign,
-            status,
-            type,
-            tickets,
-        ])) {
-            return;
+    static async create(
+        aircraft: Aircraft,
+        aircraftReg: string,
+        airline: Airline,
+        arrival: FlightArrivalAirportMovement,
+        departure: FlightDepartureAirportMovement,
+        number: string,
+        callSign: string,
+        status: FlightStatusEnum,
+        ticket: FlightTicket,
+        user: User,
+        flightDistanceProvider: FlightDistanceProvider,
+    ): Promise<Result<Flight, ValidationContainerException | IncompleteFlightException>> {
+        // Calculate flight distance between arrival and departure airports
+        const getFlightDistanceResult = await flightDistanceProvider.getFlightDistance(
+            arrival.airport,
+            departure.airport
+        );
+
+        if (getFlightDistanceResult.isErr()) {
+            return err(getFlightDistanceResult.unwrapErr());
         }
 
-        Validate.assertResults([
+        const distance: FlightDistance = getFlightDistanceResult.unwrap();
+
+        return Validate.withResults([
             Flight.validateAircraft(aircraft),
             Flight.validateAircraftReg(aircraftReg),
             Flight.validateAirline(airline),
@@ -129,21 +159,21 @@ export class Flight extends BaseRootTypeormEntity {
             Flight.validateCallSign(callSign),
             Flight.validateNumber(number),
             Flight.validateStatus(status),
-            Flight.validateType(type),
-            Flight.validateTickets(tickets, type),
-        ]);
-
-        this._aircraft = aircraft;
-        this._aircraftReg = aircraftReg;
-        this._airline = airline;
-        this._arrival = arrival;
-        this._departure = departure;
-        this._distance = distance;
-        this._number = number;
-        this._callSign = callSign;
-        this._status = status;
-        this._type = type;
-        this._tickets = tickets;
+            Flight.validateTicket(ticket),
+            Flight.validateUser(user),
+        ]).map(() => new Flight(
+            aircraft,
+            aircraftReg,
+            airline,
+            arrival,
+            departure,
+            getFlightDistanceResult.unwrap(),
+            number,
+            callSign,
+            status,
+            ticket,
+            user,
+        ));
     }
 
     static createGeneral(
@@ -157,266 +187,216 @@ export class Flight extends BaseRootTypeormEntity {
         callSign: string,
         status: FlightStatusEnum,
     ): Result<Flight, ValidationContainerException> {
-        return Validate.wrapConstruction(() => (
-            new Flight(
-                aircraft,
-                aircraftReg,
-                airline,
-                arrival,
-                departure,
-                distance,
-                number,
-                callSign,
-                status,
-                FlightType.GENERAL,
-            )
+        const validateResults = Validate.withResults([
+            Flight.validateAircraft(aircraft),
+            Flight.validateAircraftReg(aircraftReg),
+            Flight.validateAirline(airline),
+            Flight.validateArrival(arrival),
+            Flight.validateDeparture(departure),
+            Flight.validateDistance(distance),
+            Flight.validateCallSign(callSign),
+            Flight.validateNumber(number),
+            Flight.validateStatus(status),
+        ]);
+
+        return validateResults.map(() => new Flight(
+            aircraft,
+            aircraftReg,
+            airline,
+            arrival,
+            departure,
+            distance,
+            number,
+            callSign,
+            status,
+            null,
+            null,
         ));
     }
 
-    static createCustom(
-        aircraft: Aircraft,
-        aircraftReg: string,
-        airline: Airline,
-        arrival: FlightArrivalAirportMovement,
-        departure: FlightDepartureAirportMovement,
-        distance: FlightDistance,
-        number: string,
-        callSign: string,
-        ticket: FlightTicket,
-    ): Result<Flight, ValidationContainerException> {
-        return Validate.wrapConstruction(() => (
-            new Flight(
-                aircraft,
-                aircraftReg,
-                airline,
-                arrival,
-                departure,
-                distance,
-                number,
-                callSign,
-                FlightStatusEnum.UNKNOWN,
-                FlightType.CUSTOM,
-                [ticket],
-            )
-        ));
-    }
+    async change(
+        values: {
+            aircraft?: Aircraft,
+            aircraftReg?: string,
+            airline?: Airline,
+            arrival?: FlightArrivalAirportMovement,
+            departure?: FlightDepartureAirportMovement,
+            distance?: FlightDistance,
+            number?: string,
+            callSign?: string,
+            status?: FlightStatusEnum,
+            ticket?: FlightTicket,
+        },
+        flightDistanceProvider: FlightDistanceProvider,
+    ): Promise<Result<Flight, ValidationContainerException | IncompleteFlightException>> {
+        let distance: FlightDistance;
 
-    addTicket(ticket: FlightTicket) {
-        if (this._type === FlightType.GENERAL) {
-            this._tickets = [
-                ...this._tickets?.filter(value => value.passenger.id !== ticket.passenger.id),
-                ticket,
-            ];
+        // Calculate flight distance between arrival and departure airports if one of them was changed
+        if (values.arrival || values.departure) {
+            const getFlightDistanceResult = await flightDistanceProvider.getFlightDistance(
+                values.arrival ? values.arrival.airport : this.arrival.airport,
+                values.departure ? values.departure.airport : this.departure.airport,
+            );
+
+            if (getFlightDistanceResult.isErr()) {
+                return err(getFlightDistanceResult.unwrapErr());
+            }
+
+            distance = getFlightDistanceResult.unwrap();
         }
-    }
 
-    removeTicket(ticket: FlightTicket) {
-        if (this._tickets && this._type === FlightType.GENERAL) {
-            this._tickets = this._tickets.filter(value => value.passenger.id !== ticket.passenger.id);
-        }
-    }
-
-    findTicketByPassengerId(passengerId: number) {
-        return this._tickets?.find(value => value.passenger.id === passengerId);
+        return Validate.withResults([
+            values.aircraft ? this.changeAircraft(values.aircraft) : ok(null),
+            values.aircraftReg ? this.changeAircraftReg(values.aircraftReg) : ok(null),
+            values.airline ? this.changeAirline(values.airline) : ok(null),
+            values.arrival ? this.changeArrival(values.arrival) : ok(null),
+            values.departure ? this.changeDeparture(values.departure) : ok(null),
+            distance ? this.changeDistance(distance) : ok(null),
+            values.number ? this.changeNumber(values.number) : ok(null),
+            values.callSign ? this.changeCallSign(values.callSign) : ok(null),
+            values.status ? this.changeStatus(values.status) : ok(null),
+            values.ticket ? this.changeTicket(values.ticket) : ok(null),
+        ]).map(() => this);
     }
 
     changeAircraft(aircraft: Aircraft): ValidationResult {
         return Flight.validateAircraft(aircraft)
             .map(() => {
-                this._aircraft = aircraft;
+                this.aircraft = aircraft;
             });
     }
 
     changeAircraftReg(aircraftReg: string): ValidationResult {
         return Flight.validateAircraftReg(aircraftReg)
             .map(() => {
-                this._aircraftReg = aircraftReg;
+                this.aircraftReg = aircraftReg;
             });
     }
 
     changeAirline(airline: Airline): ValidationResult {
         return Flight.validateAirline(airline)
             .map(() => {
-                this._airline = airline;
-            });
-    }
-
-    changeArrival(arrival: FlightArrivalAirportMovement): ValidationResult {
-        return Flight.validateArrival(arrival)
-            .map(() => {
-                this._arrival = arrival;
-            });
-    }
-
-    changeDeparture(departure: FlightDepartureAirportMovement): ValidationResult {
-        return Flight.validateDeparture(departure)
-            .map(() => {
-                this._departure = departure;
-            });
-    }
-
-    changeDistance(distance: FlightDistance): ValidationResult {
-        return Flight.validateDistance(distance)
-            .map(() => {
-                this._distance = distance;
+                this.airline = airline;
             });
     }
 
     changeNumber(number: string): ValidationResult {
         return Flight.validateNumber(number)
             .map(() => {
-                this._number = number;
+                this.number = number;
             });
     }
 
     changeCallSign(callSign: string): ValidationResult {
         return Flight.validateCallSign(callSign)
             .map(() => {
-                this._callSign = callSign;
+                this.callSign = callSign;
             });
     }
 
     changeStatus(status: FlightStatusEnum): ValidationResult {
-        if (this._type === FlightType.GENERAL) {
-            return Flight.validateStatus(status)
-                .map(() => {
-                    this._status = status;
-                });
-        }
-        return ok(null);
-    }
-
-    changeTicket(ticket: FlightTicket): ValidationResult {
-        return Validate.withProperty('ticket', ticket)
-            .isNotEmpty()
-            .isValid()
+        return Flight.validateStatus(status)
             .map(() => {
-                this._tickets = [
-                    ...this._tickets?.filter(value => value.passenger.id !== ticket.passenger.id),
-                    ticket,
-                ];
+                this.status = status;
             });
     }
 
-    get aircraft(): Aircraft {
-        return this._aircraft;
+    changeTicket(ticket: FlightTicket): ValidationResult {
+        return Flight.validateTicket(ticket)
+            .map(() => {
+                this.ticket = ticket;
+            });
     }
 
-    get aircraftReg(): string {
-        return this._aircraftReg;
+    protected changeArrival(arrival: FlightArrivalAirportMovement): ValidationResult {
+        return Flight.validateArrival(arrival)
+            .map(() => {
+                this.arrival = arrival;
+            });
     }
 
-    get airline(): Airline {
-        return this._airline;
+    protected changeDeparture(departure: FlightDepartureAirportMovement): ValidationResult {
+        return Flight.validateDeparture(departure)
+            .map(() => {
+                this.departure = departure;
+            });
     }
 
-    get arrival(): FlightArrivalAirportMovement {
-        return this._arrival;
+    protected changeDistance(distance: FlightDistance): ValidationResult {
+        return Flight.validateDistance(distance)
+            .map(() => {
+                this.distance = distance;
+            });
     }
 
-    get departure(): FlightDepartureAirportMovement {
-        return this._departure;
-    }
-
-    get distance(): FlightDistance {
-        return this._distance;
-    }
-
-    get number(): string {
-        return this._number;
-    }
-
-    get callSign(): string {
-        return this._callSign;
-    }
-
-    get status(): FlightStatusEnum {
-        return this._status;
-    }
-
-    get type(): FlightType {
-        return this._type;
-    }
-
-    get tickets(): FlightTicket[] {
-        return this._tickets;
-    }
-
-    protected static validateAircraft(aircraft: Aircraft) {
+    private static validateAircraft(aircraft: Aircraft) {
         return Validate.withProperty('aircraft', aircraft)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateAircraftReg(aircraftReg: string) {
+    private static validateAircraftReg(aircraftReg: string) {
         return Validate.withProperty('aircraftReg', aircraftReg)
+            .isOptional()
             .isNotEmpty()
             .maxLength(AIRCRAFT_REG_MAX_LENGTH)
             .isValid();
     }
 
-    protected static validateAirline(airline: Airline) {
+    private static validateAirline(airline: Airline) {
         return Validate.withProperty('airline', airline)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateArrival(arrival: FlightArrivalAirportMovement) {
+    private static validateArrival(arrival: FlightArrivalAirportMovement) {
         return Validate.withProperty('arrival', arrival)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateDeparture(departure: FlightDepartureAirportMovement) {
+    private static validateDeparture(departure: FlightDepartureAirportMovement) {
         return Validate.withProperty('departure', departure)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateDistance(distance: FlightDistance) {
+    private static validateDistance(distance: FlightDistance) {
         return Validate.withProperty('distance', distance)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateNumber(number: string) {
+    private static validateNumber(number: string) {
         return Validate.withProperty('number', number)
             .isNotEmpty()
             .maxLength(NUMBER_MAX_LENGTH)
             .isValid();
     }
 
-    protected static validateCallSign(callSign: string) {
+    private static validateCallSign(callSign: string) {
         return Validate.withProperty('callSign', callSign)
+            .isOptional()
             .isNotEmpty()
             .maxLength(CALL_SIGN_MAX_LENGTH)
             .isValid();
     }
 
-    protected static validateStatus(status: FlightStatusEnum) {
+    private static validateStatus(status: FlightStatusEnum) {
         return Validate.withProperty('status', status)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateType(type: FlightType) {
-        return Validate.withProperty('type', type)
+    private static validateTicket(ticket: FlightTicket) {
+        return Validate.withProperty('ticket', ticket)
             .isNotEmpty()
             .isValid();
     }
 
-    protected static validateTickets(tickets: FlightTicket[], type: FlightType) {
-        return Validate.withProperty('tickets', tickets)
-            .custom(
-                'length',
-                'Custom flight must have one ticket',
-                (value: FlightTicket[]) => {
-                    if (type === FlightType.GENERAL) {
-                        return true;
-                    }
-                    return type === FlightType.CUSTOM && value.length === 1;
-                },
-            )
+    private static validateUser(user: User) {
+        return Validate.withProperty('user', user)
+            .isNotEmpty()
             .isValid();
     }
 }

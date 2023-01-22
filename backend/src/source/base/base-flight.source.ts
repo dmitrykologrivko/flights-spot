@@ -6,12 +6,12 @@ import { SourceException } from './source.exception';
 
 export abstract class BaseFlightSource {
 
-    abstract async getFlights(
+    abstract getFlights(
         flightNumber: string,
         dateLocal: string
     ): Promise<Result<FlightDto[], SourceException>>;
 
-    abstract async getFlightDistance(
+    abstract getFlightDistance(
         from: string,
         to: string,
         codeType: AirportCodeType,

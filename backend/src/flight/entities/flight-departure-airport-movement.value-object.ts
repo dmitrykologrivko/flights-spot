@@ -6,30 +6,24 @@ import { FlightAirportMovement } from './flight-airport-movement.value-object';
 export class FlightDepartureAirportMovement extends FlightAirportMovement {
 
     @Column({
-        name: 'actualTimeLocal',
         nullable: true,
     })
-    protected readonly _actualTimeLocal: string;
+    actualTimeLocal: string;
 
     @Column({
-        name: 'actualTimeUtc',
         nullable: true,
     })
-    protected readonly _actualTimeUtc: string;
+    actualTimeUtc: string;
 
-    @Column({
-        name: 'scheduledTimeLocal',
-    })
-    protected readonly _scheduledTimeLocal: string;
+    @Column()
+    scheduledTimeLocal: string;
 
-    @Column({
-        name: 'scheduledTimeUtc',
-    })
-    protected readonly _scheduledTimeUtc: string;
+    @Column()
+    scheduledTimeUtc: string;
 
     @ManyToOne(type => Airport, { eager: true })
     @JoinColumn({ name: 'DepartureAirportId' })
-    protected readonly _airport: Airport;
+    airport: Airport;
 
     static create(
         actualTimeLocal: string,

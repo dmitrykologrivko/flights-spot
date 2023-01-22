@@ -1,57 +1,54 @@
-import { Repository, SelectQueryBuilder, Like } from 'typeorm';
 import {
-    ApplicationService,
-    InjectRepository,
-    ClassTransformer,
-    ClassValidator,
-    ValidationContainerException,
-    BaseCrudService,
-    CrudOperations,
-    InputWrapper,
-    PagePagination,
-    PaginatedContainer,
-    AsyncResult,
-    Result,
+    QueryRunner,
+    Repository,
+    SelectQueryBuilder,
+    Like,
+    Equal,
+} from 'typeorm';
+import {
+    merge,
     ok,
     err,
-    merge,
     proceed,
+    mapErr,
+    Result,
+    ApplicationService,
+    InjectRepository,
+    BaseCrudService,
+    InputWrapper,
+    CreateInput,
+    DestroyInput,
+    ListInput,
+    PagePagination,
+    PaginatedContainer,
+    RetrieveInput,
+    UpdateInput,
+    ValidationContainerException,
+    ClassValidator,
+    ClassTransformer,
+    CrudOperations,
 } from '@nestjs-boilerplate/core';
-import { User } from '@nestjs-boilerplate/auth';
+import { User } from '@nestjs-boilerplate/user';
 import {
-    BaseFlightSource,
-    FlightDto as SourceFlight,
     AirportCodeType,
+    BaseFlightSource,
     SourceException,
+    FlightDto as SourceFlightDto
 } from '@source/base';
 import { Aircraft } from '@aircraft/aircraft.entity';
 import { Airline } from '@airline/airline.entity';
 import { Airport } from '@airport/airport.entity';
-import { Flight, FlightType } from '../entities/flight.entity';
+import { Flight, FlightDistanceProvider } from '../entities/flight.entity';
 import { FlightArrivalAirportMovement } from '../entities/flight-arrival-airport-movement.value-object';
 import { FlightDepartureAirportMovement } from '../entities/flight-departure-airport-movement.value-object';
 import { FlightDistance } from '../entities/flight-distance.value-object';
 import { FlightTicket } from '../entities/flight-ticket.value-object';
-import { UserFlightDto } from '../dto/user-flight/user-flight.dto';
-import { UserFlightTicketDto } from '../dto/user-flight/user-flight-ticket.dto';
-import { FlightAircraftDto } from '../dto/flight/flight-aircraft.dto';
-import { FlightAirportMovementDto } from '../dto/flight/flight-airport-movement.dto';
-import { FlightDistanceDto } from '../dto/flight/flight-distance.dto';
-import { GetFlightsInput } from '../dto/get-flights.input';
-import { RetrieveFlightInput } from '../dto/retrieve-flight.input';
-import { DestroyFlightInput } from '../dto/destroy-flight.input';
+import { FlightDto } from '../dto/flight/flight.dto';
 import { LookupFlightInput } from '../dto/lookup-flight.input';
 import { LookupFlightOutput } from '../dto/lookup-flight.output';
 import { FlightNotFoundException } from '../exceptions/flight-not-found.exception';
 import { SeveralFlightsFoundException } from '../exceptions/several-flights-found.exception';
 import { IncompleteFlightException } from '../exceptions/incomplete-flight.exception';
-
-type FlightValueObjects = [
-    FlightArrivalAirportMovement,
-    FlightDepartureAirportMovement,
-    FlightTicket,
-    FlightDistance
-];
 
 type LookupFlightResult = Promise<Result<LookupFlightOutput, ValidationContainerException |
     FlightNotFoundException | SeveralFlightsFoundException |
@@ -59,376 +56,184 @@ type LookupFlightResult = Promise<Result<LookupFlightOutput, ValidationContainer
 
 @ApplicationService()
 export class FlightService extends BaseCrudService<Flight,
-    UserFlightDto,
-    PaginatedContainer<UserFlightDto>,
-    GetFlightsInput,
-    RetrieveFlightInput,
-    UserFlightDto,
-    UserFlightDto,
-    DestroyFlightInput> {
+    FlightDto,
+    ListInput,
+    FlightDto,
+    PaginatedContainer<FlightDto>> {
 
     constructor(
-        @InjectRepository(Aircraft)
-        private readonly aircraftRepository: Repository<Aircraft>,
-        @InjectRepository(Airline)
-        private readonly airlineRepository: Repository<Airline>,
-        @InjectRepository(Airport)
-        private readonly airportRepository: Repository<Airport>,
         @InjectRepository(Flight)
         private readonly flightRepository: Repository<Flight>,
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
         private readonly flightSource: BaseFlightSource,
     ) {
         super(
             flightRepository,
             {
                 entityCls: Flight,
-                dtoCls: UserFlightDto,
-                createInputCls: UserFlightDto,
-                updateInputCls: UserFlightDto,
+                listOutputCls: FlightDto,
+                retrieveOutputCls: FlightDto,
+                createPayloadCls: FlightDto,
+                createOutputCls: FlightDto,
+                updatePayloadCls: FlightDto,
+                updateOutputCls: FlightDto,
             },
         );
     }
 
-    protected getPagination(
-        input: GetFlightsInput,
-    ): (qb: SelectQueryBuilder<Flight>) => PagePagination<Flight> {
-        return qb => new PagePagination(qb, input);
+    protected getPagination(input: ListInput, qb: SelectQueryBuilder<Flight>) {
+        return new PagePagination<Flight>(qb, input);
     }
 
     protected getQuery(
-        wrapper?: InputWrapper<GetFlightsInput, RetrieveFlightInput, UserFlightDto, UserFlightDto, DestroyFlightInput>,
+        queryRunner: QueryRunner,
+        wrapper?: InputWrapper<ListInput, RetrieveInput, CreateInput<FlightDto>, UpdateInput<FlightDto>, DestroyInput>
     ): SelectQueryBuilder<Flight> {
-        const query = super.getQuery(wrapper)
-            .leftJoinAndSelect(`${this.alias}._aircraft`, 'aircraft')
-            .leftJoinAndSelect(`${this.alias}._airline`, 'airline')
-            .leftJoinAndSelect(`${this.alias}._arrival._airport`, 'arrivalAirport')
-            .leftJoinAndSelect(`${this.alias}._departure._airport`, 'departureAirport')
-            .leftJoinAndSelect(`${this.alias}._tickets`, 'ticket')
-            .leftJoinAndSelect('ticket._passenger', 'passenger');
-
-        if (wrapper) {
-            query.andWhere(qb => {
-                const subQuery = qb.subQuery()
-                    .select('ticket._parent')
-                    .from(FlightTicket, 'ticket')
-                    .where('ticket._passenger.id = :user', { user: wrapper.input.userId });
-                return `${this.alias}.id IN ${subQuery.getQuery()}`;
-            })
-        }
-
-        return query;
+        return super.getQuery(queryRunner, wrapper)
+            .leftJoinAndSelect(`${this.alias}.aircraft`, 'aircraft')
+            .leftJoinAndSelect(`${this.alias}.airline`, 'airline')
+            .leftJoinAndSelect(`${this.alias}.arrival.airport`, 'arrivalAirport')
+            .leftJoinAndSelect(`${this.alias}.departure.airport`, 'departureAirport')
+            .leftJoinAndSelect(`${this.alias}.user`, 'user')
+            .where('user.id = :user', { user: wrapper.input.extra?.user?.id });
     }
 
     protected async performCreateEntity(
-        input: UserFlightDto,
+        input: CreateInput<FlightDto>,
+        queryRunner: QueryRunner
     ): Promise<Result<Flight, IncompleteFlightException | SourceException>> {
-        if (input.type === FlightType.GENERAL) {
-            return FlightTicket.create(
-                await this.userRepository.findOne(input.userId),
-                input.ticket?.seat,
-                input.ticket?.note,
-            ).mapErr(() =>
-                new IncompleteFlightException()
-            ).proceedAsync(async ticket => {
-                const flight = await this.getQuery()
-                    .andWhere(`${this.alias}.id = :id`, { id: input.parentFlight })
-                    .andWhere(`${this.alias}._type = :type`, { type: FlightType.GENERAL })
-                    .getOne();
-
-                if (!flight) {
-                    return err(new IncompleteFlightException());
-                }
-
-                flight.addTicket(ticket);
-
-                return ok(await this.flightRepository.save(flight));
-            });
-        }
+        const arrivalAirport = await queryRunner.manager.findOneBy(
+            Airport,
+            { id: Equal(input.payload.arrival.airportId) }
+        );
+        const departureAirport = await queryRunner.manager.findOneBy(
+            Airport,
+            { id: Equal(input.payload.departure.airportId) }
+        );
 
         return merge([
             // Create arrival
             FlightArrivalAirportMovement.create(
-                input.arrival.actualTimeLocal,
-                input.arrival.actualTimeUtc,
-                input.arrival.scheduledTimeLocal,
-                input.arrival.scheduledTimeUtc,
-                await this.airportRepository.findOne(input.arrival.airportId),
+                input.payload.arrival.actualTimeLocal,
+                input.payload.arrival.actualTimeUtc,
+                input.payload.arrival.scheduledTimeLocal,
+                input.payload.arrival.scheduledTimeUtc,
+                arrivalAirport,
             ).mapErr(() => new IncompleteFlightException()),
 
             // Create departure
             FlightDepartureAirportMovement.create(
-                input.departure.actualTimeLocal,
-                input.departure.actualTimeUtc,
-                input.departure.scheduledTimeLocal,
-                input.departure.scheduledTimeUtc,
-                await this.airportRepository.findOne(input.departure.airportId),
+                input.payload.departure.actualTimeLocal,
+                input.payload.departure.actualTimeUtc,
+                input.payload.departure.scheduledTimeLocal,
+                input.payload.departure.scheduledTimeUtc,
+                departureAirport,
             ).mapErr(() => new IncompleteFlightException()),
 
             // Create flight ticket
             FlightTicket.create(
-                await this.userRepository.findOne(input.userId),
-                input.ticket?.seat,
-                input.ticket?.note,
+                input.payload.ticket.seat,
+                input.payload.ticket.note,
             ).mapErr(() => new IncompleteFlightException()),
         ]).proceedAsync(async values => {
-            const arrival = values[0] as FlightArrivalAirportMovement;
-            const departure = values[1] as FlightDepartureAirportMovement;
-
-            // Calculate flight distance between arrival and departure airports
-            const getFlightDistanceResult = await this.flightSource.getFlightDistance(
-                arrival.airport.iata,
-                departure.airport.iata,
-                AirportCodeType.IATA,
-            );
-
-            return getFlightDistanceResult.proceed(sourceDistance =>
-                // Create distance
-                FlightDistance.create(
-                    sourceDistance.feet,
-                    sourceDistance.km,
-                    sourceDistance.meter,
-                    sourceDistance.mile,
-                    sourceDistance.nm,
-                ).mapErr(() => new IncompleteFlightException()),
-            ).map((distance): FlightValueObjects => [ ...values, distance ]);
-        }).then(proceed(async values => {
-            const aircraft = await this.aircraftRepository.findOne(input.aircraftId);
-            const airline = await this.airlineRepository.findOne(input.airlineId);
+            const aircraft = await queryRunner.manager.findOneBy(Aircraft, { id: Equal(input.payload.aircraftId) });
+            const airline = await queryRunner.manager.findOneBy(Airline,  { id: Equal(input.payload.airlineId) });
             const arrival = values[0] as FlightArrivalAirportMovement;
             const departure = values[1] as FlightDepartureAirportMovement;
             const ticket = values[2];
-            const distance = values[3];
 
             // Create flight
-            return Flight.createCustom(
+            return Flight.create(
                 aircraft,
-                input.aircraftReg,
+                input.payload.aircraftReg,
                 airline,
                 arrival,
                 departure,
-                distance,
-                input.number,
-                input.callSign,
+                input.payload.number,
+                input.payload.callSign,
+                input.payload.status,
                 ticket,
-            ).mapErr(() =>
-                new IncompleteFlightException()
-            ).proceedAsync(async flight =>
-               ok(await this.flightRepository.save(flight))
-            );
-        }));
+                await queryRunner.manager.findOneBy(User, { id: input.extra?.user?.id }),
+                this.getFlightDistanceProvider(),
+            ).then(mapErr(async () =>
+                new IncompleteFlightException())
+            ).then(proceed(async flight =>
+                ok(await queryRunner.manager.save(flight))
+            ));
+        });
     }
 
     protected async performUpdateEntity(
-        input: UserFlightDto,
-        entity: Flight
+        input: UpdateInput<FlightDto>,
+        entity: Flight,
+        queryRunner: QueryRunner
     ): Promise<Result<Flight, IncompleteFlightException | SourceException>> {
-        if (entity.type === FlightType.GENERAL) {
-            if (!input.ticket) {
-                return ok(entity);
-            }
-
-            return FlightTicket.create(
-                await this.userRepository.findOne(input.userId),
-                input.ticket?.seat,
-                input.ticket?.note,
-            ).mapErr(() =>
-                new IncompleteFlightException()
-            ).proceed(ticket =>
-                entity.changeTicket(ticket).mapErr(() => new IncompleteFlightException())
-            ).proceedAsync(async () =>
-                ok(await this.flightRepository.save(entity))
-            );
-        }
+        const arrivalAirport = await queryRunner.manager.findOneBy(
+            Airport,
+            { id: Equal(input.payload.arrival?.airportId) }
+        );
+        const departureAirport = await queryRunner.manager.findOneBy(
+            Airport,
+            { id: Equal(input.payload.departure?.airportId) }
+        );
 
         return merge([
-            input.arrival
+            input.payload.arrival
                 ? FlightArrivalAirportMovement.create(
-                    input.arrival.actualTimeLocal,
-                    input.arrival.actualTimeUtc,
-                    input.arrival.scheduledTimeLocal,
-                    input.arrival.scheduledTimeUtc,
-                    await this.airportRepository.findOne(input.arrival.airportId),
+                    input.payload.arrival.actualTimeLocal,
+                    input.payload.arrival.actualTimeUtc,
+                    input.payload.arrival.scheduledTimeLocal,
+                    input.payload.arrival.scheduledTimeUtc,
+                    arrivalAirport,
                 ).mapErr(() => new IncompleteFlightException())
-                : ok(null),
+                : ok<FlightArrivalAirportMovement, never>(null),
 
-            input.departure
+            input.payload.departure
                 ? FlightDepartureAirportMovement.create(
-                    input.departure.actualTimeLocal,
-                    input.departure.actualTimeUtc,
-                    input.departure.scheduledTimeLocal,
-                    input.departure.scheduledTimeUtc,
-                    await this.airportRepository.findOne(input.departure.airportId),
+                    input.payload.departure.actualTimeLocal,
+                    input.payload.departure.actualTimeUtc,
+                    input.payload.departure.scheduledTimeLocal,
+                    input.payload.departure.scheduledTimeUtc,
+                    departureAirport,
                 ).mapErr(() => new IncompleteFlightException())
-                : ok(null),
+                : ok<FlightArrivalAirportMovement, never>(null),
 
-            input.ticket
+            input.payload.ticket
                 ? FlightTicket.create(
-                    await this.userRepository.findOne(input.userId),
-                    input.ticket?.seat,
-                    input.ticket?.note,
+                    input.payload.ticket.seat,
+                    input.payload.ticket.note,
                 ).mapErr(() => new IncompleteFlightException())
-                : ok(null),
+                : ok<FlightTicket, never>(null),
         ]).proceedAsync(async values => {
-            let arrival = values[0] as FlightArrivalAirportMovement;
-            let departure = values[1] as FlightDepartureAirportMovement;
-
-            if (!(arrival && departure)) {
-                return ok([ ...values, null ] as FlightValueObjects);
-            }
-
-            if (!arrival) {
-                arrival = entity.arrival;
-            }
-            if (!departure) {
-                departure = entity.departure;
-            }
-
-            // Calculate flight distance between arrival and departure airports
-            const getFlightDistanceResult = await this.flightSource.getFlightDistance(
-                arrival.airport.iata,
-                departure.airport.iata,
-                AirportCodeType.IATA,
-            );
-
-            return getFlightDistanceResult.proceed(sourceDistance =>
-                // Create distance
-                FlightDistance.create(
-                    sourceDistance.feet,
-                    sourceDistance.km,
-                    sourceDistance.meter,
-                    sourceDistance.mile,
-                    sourceDistance.nm,
-                ).mapErr(() => new IncompleteFlightException()),
-            ).map((distance): FlightValueObjects => [ ...values, distance ]);
-        }).then(proceed(async values => {
-            const aircraft = input.aircraftId
-                 ? await this.aircraftRepository.findOne(input.aircraftId)
-                 : null;
-            const airline = input.airlineId
-                ? await this.airlineRepository.findOne(input.airlineId)
-                : null;
+            const aircraft = await queryRunner.manager.findOneBy(Aircraft, { id: Equal(input.payload.aircraftId) });
+            const airline = await queryRunner.manager.findOneBy(Airline,{ id: Equal(input.payload.airlineId) } );
             const arrival = values[0] as FlightArrivalAirportMovement;
             const departure = values[1] as FlightDepartureAirportMovement;
             const ticket = values[2];
-            const distance = values[3];
 
-            return ok(null)
-                .proceed(() => {
-                    if (aircraft) {
-                        return entity.changeAircraft(aircraft);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (input.aircraftReg) {
-                        return entity.changeAircraftReg(input.aircraftReg);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (airline) {
-                        return entity.changeAirline(airline);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (arrival) {
-                        return entity.changeArrival(arrival);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (departure) {
-                        return entity.changeDeparture(departure);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (distance) {
-                        return entity.changeDistance(distance);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (input.number) {
-                        return entity.changeNumber(input.number);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (input.callSign) {
-                        return entity.changeCallSign(input.callSign);
-                    }
-                    return ok(null);
-                }).proceed(() => {
-                    if (ticket) {
-                        return entity.changeTicket(ticket);
-                    }
-                    return ok(null);
-                }).mapErr(() =>
-                    new IncompleteFlightException()
-                ).proceedAsync(async () =>
-                    ok(await this.flightRepository.save(entity))
-                );
-        })) as Promise<Result<Flight, IncompleteFlightException | SourceException>>;
-    }
-
-    protected async performDestroyEntity(
-        input: DestroyFlightInput,
-        entity: Flight,
-    ): Promise<Result<void, void>> {
-        if (entity.type === FlightType.CUSTOM) {
-            return super.performDestroyEntity(input, entity);
-        }
-
-        entity.removeTicket(
-            entity.findTicketByPassengerId(input.userId),
-        );
-
-        await this.flightRepository.save(entity);
-        return ok(null);
-    }
-
-    protected mapListDto(
-        entities: Flight[],
-        input?: GetFlightsInput,
-    ): UserFlightDto[] {
-        return entities.map(entity => this.mapUserFlightDto(entity, input.userId));
-    }
-
-    protected mapDtoOutput(
-        entity: Flight,
-        wrapper?: InputWrapper<never, RetrieveFlightInput, UserFlightDto, UserFlightDto, DestroyFlightInput>,
-    ): UserFlightDto {
-        return this.mapUserFlightDto(entity, (wrapper.input as any).userId);
+            return entity.change({
+                    aircraft,
+                    aircraftReg: input.payload.aircraftReg,
+                    airline,
+                    arrival,
+                    departure,
+                    number: input.payload.number,
+                    callSign: input.payload.callSign,
+                    status: input.payload.status,
+                    ticket
+                },
+                this.getFlightDistanceProvider(),
+            ).then(mapErr(async () =>
+                new IncompleteFlightException()
+            )).then(proceed(async () =>
+                ok(await queryRunner.manager.save(entity))
+            ));
+        });
     }
 
     async lookupFlight(input: LookupFlightInput): LookupFlightResult {
-        // Validate input
-        return AsyncResult.from(ClassValidator.validate(LookupFlightInput, input))
-            // Find already created flight in the database
-            .proceed(async () => {
-                return ok(
-                    await this.getQuery()
-                        // TODO: dateLocal
-                        .andWhere(`${this.alias}._type = :type`, { type: FlightType.GENERAL })
-                        .andWhere(`${this.alias}._number = :number`, { number: input.flightNumber })
-                        .getOne(),
-                );
-            })
-            .proceed(flight => {
-                if (flight) {
-                    return ok(flight);
-                }
-
-                // Find flight from the external source
-                return this.findFlightFromSource(input.flightNumber, input.dateLocal);
-            })
-            // Map to DTO
-            .map(flight =>
-                ClassTransformer.toClassObject(LookupFlightOutput, flight, { groups: [CrudOperations.READ] })
-            )
-            .toPromise();
-    }
-
-    private async findFlightFromSource(flightNumber: string, dateLocal: string) {
-        return (await this.flightSource.getFlights(flightNumber, dateLocal))
-            .proceed(flights => {
+        return ClassValidator.validate(LookupFlightInput, input)
+            .then(proceed(() => this.flightSource.getFlights(input.flightNumber, input.dateLocal)))
+            .then(proceed(async (flights: SourceFlightDto[]) => {
                 if (flights.length === 0) {
                     return err(new FlightNotFoundException());
                 }
@@ -437,38 +242,40 @@ export class FlightService extends BaseCrudService<Flight,
                     return err(new SeveralFlightsFoundException());
                 }
 
-                return ok(flights[0]);
-            })
-            .proceedAsync(async (sourceFlight: SourceFlight) => {
-                const aircraft = await this.aircraftRepository.findOne({
+                const sourceFlight: SourceFlightDto = flights[0];
+
+                // TODO find better way to get manager
+                const manager = this.repository.manager;
+
+                const aircraft = await manager.findOne(Aircraft,{
                     where: [
-                        { _iata: sourceFlight.aircraft.iata },
-                        { _icao: sourceFlight.aircraft.icao },
-                        { _name: Like(`%${sourceFlight.aircraft.name}%`) },
+                        { iata: sourceFlight.aircraft.iata },
+                        { icao: sourceFlight.aircraft.icao },
+                        { name: Like(`%${sourceFlight.aircraft.name}%`) },
                     ]
                 });
 
-                const airline = await this.airlineRepository.findOne({
+                const airline = await manager.findOne(Airline,{
                     where: [
-                        { _iata: sourceFlight.airline.iata },
-                        { _icao: sourceFlight.airline.icao },
-                        { _name: Like(`%${sourceFlight.airline.name}%`) },
+                        { iata: sourceFlight.airline.iata },
+                        { icao: sourceFlight.airline.icao },
+                        { name: Like(`%${sourceFlight.airline.name}%`) },
                     ]
                 });
 
-                const departureAirport = await this.airportRepository.findOne({
+                const departureAirport = await manager.findOne(Airport,{
                     where: [
-                        { _iata: sourceFlight.departure.airport.iata },
-                        { _icao: sourceFlight.departure.airport.icao },
-                        { _name: Like(`%${sourceFlight.departure.airport.name}%`) },
+                        { iata: sourceFlight.departure.airport.iata },
+                        { icao: sourceFlight.departure.airport.icao },
+                        { name: Like(`%${sourceFlight.departure.airport.name}%`) },
                     ]
                 });
 
-                const arrivalAirport = await this.airportRepository.findOne({
+                const arrivalAirport = await manager.findOne(Airport,{
                     where: [
-                        { _iata: sourceFlight.arrival.airport.iata },
-                        { _icao: sourceFlight.arrival.airport.icao },
-                        { _name: Like(`%${sourceFlight.arrival.airport.name}%`) },
+                        { iata: sourceFlight.arrival.airport.iata },
+                        { icao: sourceFlight.arrival.airport.icao },
+                        { name: Like(`%${sourceFlight.arrival.airport.name}%`) },
                     ]
                 });
 
@@ -480,7 +287,7 @@ export class FlightService extends BaseCrudService<Flight,
                         sourceFlight.arrival.scheduledTimeLocal,
                         sourceFlight.arrival.scheduledTimeUtc,
                         arrivalAirport,
-                    ).map_err(() => new IncompleteFlightException()),
+                    ).mapErr(() => new IncompleteFlightException()),
 
                     // Create departure
                     FlightDepartureAirportMovement.create(
@@ -489,7 +296,7 @@ export class FlightService extends BaseCrudService<Flight,
                         sourceFlight.departure.scheduledTimeLocal,
                         sourceFlight.departure.scheduledTimeUtc,
                         departureAirport,
-                    ).map_err(() => new IncompleteFlightException()),
+                    ).mapErr(() => new IncompleteFlightException()),
 
                     // Create distance
                     FlightDistance.create(
@@ -498,68 +305,51 @@ export class FlightService extends BaseCrudService<Flight,
                         sourceFlight.distance.meter,
                         sourceFlight.distance.mile,
                         sourceFlight.distance.nm,
-                    ).map_err(() => new IncompleteFlightException()),
-                ]).proceed(valueObjects =>
-                    // Create flight
-                    Flight.createGeneral(
+                    ).mapErr(() => new IncompleteFlightException()),
+                ]).proceed(values => {
+                    const arrival = values[0] as FlightArrivalAirportMovement;
+                    const departure = values[1] as FlightDepartureAirportMovement;
+                    const distance = values[2];
+
+                    return Flight.createGeneral(
                         aircraft,
                         sourceFlight.aircraft.reg,
                         airline,
-                        valueObjects[0] as FlightArrivalAirportMovement,
-                        valueObjects[1] as FlightDepartureAirportMovement,
-                        valueObjects[2],
+                        arrival,
+                        departure,
+                        distance,
                         sourceFlight.number,
                         sourceFlight.callSign,
                         sourceFlight.status,
-                    ).map_err(() => new IncompleteFlightException())
-                ).proceedAsync(async flight =>
-                    // Cache flight in the database
-                    ok(await this.flightRepository.save(flight))
-                )
-            });
+                    ).mapErr(() =>
+                        new IncompleteFlightException()
+                    ).map(flight =>
+                        ClassTransformer.toClassObject(
+                            LookupFlightOutput,
+                            flight,
+                            { groups: [CrudOperations.READ] }
+                        )
+                    )
+                });
+            }));
     }
 
-    private mapUserFlightDto(flight: Flight, userId: number): UserFlightDto {
-        const groups = [CrudOperations.READ];
+    private getFlightDistanceProvider(): FlightDistanceProvider {
         return {
-            id: flight.id,
-            created: flight.created,
-            updated: flight.updated,
-            aircraft: ClassTransformer.toClassObject(
-                FlightAircraftDto,
-                flight.aircraft,
-                { groups }
-            ),
-            aircraftReg: flight.aircraftReg,
-            airline: ClassTransformer.toClassObject(
-                FlightAircraftDto,
-                flight.airline,
-                { groups }
-            ),
-            arrival: ClassTransformer.toClassObject(
-                FlightAirportMovementDto,
-                flight.arrival,
-                { groups },
-            ),
-            departure: ClassTransformer.toClassObject(
-                FlightAirportMovementDto,
-                flight.departure,
-                { groups },
-            ),
-            distance: ClassTransformer.toClassObject(
-                FlightDistanceDto,
-                flight.distance,
-                { groups },
-            ),
-            number: flight.number,
-            callSign: flight.callSign,
-            status: flight.status,
-            type: flight.type,
-            ticket: ClassTransformer.toClassObject(
-                UserFlightTicketDto,
-                flight.findTicketByPassengerId(userId),
-                { groups },
-            ),
-        } as UserFlightDto;
+            getFlightDistance: async (
+                arrivalAirport: Airport,
+                departureAirport: Airport
+            ) => {
+                if (!arrivalAirport || !departureAirport) {
+                    return err(new IncompleteFlightException());
+                }
+
+                return (await this.flightSource.getFlightDistance(
+                    arrivalAirport.iata,
+                    departureAirport.iata,
+                    AirportCodeType.IATA
+                )).mapErr(() => new IncompleteFlightException());
+            }
+        };
     }
 }

@@ -1,7 +1,6 @@
 import {
     IsNotEmpty,
     MaxLength,
-    IsNotEmptyObject,
     ValidateNested,
 } from 'class-validator';
 import { Exclude, Expose, Type } from 'class-transformer';
@@ -10,11 +9,9 @@ import {
     ReadOnly,
     WriteOnly,
     PartialUpdate,
-    CrudOperations,
 } from '@nestjs-boilerplate/core';
 import {
     FlightStatus,
-    FlightType,
     AIRCRAFT_REG_MAX_LENGTH,
     NUMBER_MAX_LENGTH,
     CALL_SIGN_MAX_LENGTH,
@@ -87,17 +84,11 @@ export class FlightDto extends BaseTimeStampedEntityDto {
     @Expose()
     status: FlightStatus;
 
-    @IsNotEmpty({ groups: [CrudOperations.CREATE] })
-    @Expose({
-        groups: [CrudOperations.READ, CrudOperations.CREATE],
-    })
-    type: FlightType;
-
     @PartialUpdate()
     @ValidateNested({ always: true })
     @IsNotEmpty({ always: true })
     @Type(() => FlightTicketDto)
     @Expose()
-    tickets: FlightTicketDto[];
+    ticket: FlightTicketDto;
 
 }

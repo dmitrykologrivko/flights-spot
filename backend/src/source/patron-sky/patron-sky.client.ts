@@ -96,16 +96,26 @@ export enum AirportCodesBy {
  */
 @Injectable()
 export class PatronSkyClient {
-    constructor(private readonly host: string) {
+
+    private readonly defaultHeaders: Record<string, string>
+
+    constructor(
+        private readonly host: string,
+        private readonly token: string
+    ) {
         if (!this.host.endsWith('/')) {
             this.host = `${host}/`;
         }
+
+        this.defaultHeaders = {
+            'Authorization': this.token
+        };
     }
 
     async getAircrafts(): Promise<Result<Aircraft[], PatronSkyApiException>> {
         try {
             return ok(
-                await this.fetchData<Aircraft[]>(`${this.host}${AIRCRAFTS_API_PATH}`)
+                await this.fetchData<Aircraft[]>(`${this.host}${AIRCRAFTS_API_PATH}`, this.defaultHeaders)
             );
         } catch (e) {
             return err(new PatronSkyApiException(e.stack));
@@ -115,7 +125,7 @@ export class PatronSkyClient {
     async getAirlines(): Promise<Result<Airline[], PatronSkyApiException>> {
         try {
             return ok(
-                await this.fetchData<Airline[]>(`${this.host}${AIRLINES_API_PATH}`)
+                await this.fetchData<Airline[]>(`${this.host}${AIRLINES_API_PATH}`, this.defaultHeaders)
             );
         } catch (e) {
             return err(new PatronSkyApiException(e.stack));
@@ -125,7 +135,7 @@ export class PatronSkyClient {
     async getAirports(): Promise<Result<Airport[], PatronSkyApiException>> {
         try {
             return ok(
-                await this.fetchData<Airport[]>(`${this.host}${AIRPORTS_API_PATH}`)
+                await this.fetchData<Airport[]>(`${this.host}${AIRPORTS_API_PATH}`, this.defaultHeaders)
             );
         } catch (e) {
             return err(new PatronSkyApiException(e.stack));
@@ -138,7 +148,7 @@ export class PatronSkyClient {
     ): Promise<Result<Flight[], PatronSkyApiException>> {
         try {
             const url = `${this.host}${FLIGHTS_API_PATH}/number/${flightNumber}/${dataLocal}`;
-            return ok(await this.fetchData<Flight[]>(url));
+            return ok(await this.fetchData<Flight[]>(url, this.defaultHeaders));
         } catch (e) {
             return err(new PatronSkyApiException(e.stack));
         }
@@ -151,7 +161,7 @@ export class PatronSkyClient {
     ): Promise<Result<FlightDistance, PatronSkyApiException>> {
         try {
             const url = `${this.host}${FLIGHTS_API_PATH}/distance/${codeType}/${from}/${to}`;
-            return ok(await this.fetchData<FlightDistance>(url));
+            return ok(await this.fetchData<FlightDistance>(url, this.defaultHeaders));
         } catch (e) {
             return err(new PatronSkyApiException(e.stack));
         }

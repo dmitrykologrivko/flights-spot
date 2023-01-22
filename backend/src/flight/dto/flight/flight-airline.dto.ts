@@ -5,6 +5,9 @@ import { BaseEntityDto } from '@nestjs-boilerplate/core';
 export class FlightAirlineDto extends BaseEntityDto {
 
     @Expose()
+    id: number;
+
+    @Expose()
     name: string;
 
     @Expose()

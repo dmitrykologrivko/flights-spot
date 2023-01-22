@@ -14,55 +14,44 @@ export const IATA_LENGTH = 3;
 export const ICAO_LENGTH = 4;
 
 @Entity()
-@Unique(['_name', '_iata', '_icao'])
+@Unique(['name', 'iata', 'icao'])
 export class Airport extends BaseTypeormEntity {
 
     @Column({
-        name: 'name',
         length: NAME_MAX_LENGTH,
     })
-    private readonly _name: string;
+    name: string;
 
     @Column({
-        name: 'city',
         length: CITY_MAX_LENGTH,
     })
-    private readonly _city: string;
+    city: string;
 
     @Column({
-        name: 'country',
         length: COUNTRY_LENGTH,
     })
-    private readonly _country: string;
+    country: string;
 
     @Column({
-        name: 'iata',
         nullable: true,
     })
-    private readonly _iata: string;
+    iata: string;
 
     @Column({
-        name: 'icao',
         nullable: true,
     })
-    private readonly _icao: string;
+    icao: string;
 
-    @Column({
-        name: 'latitude',
-    })
-    private readonly _latitude: number;
+    @Column()
+    latitude: number;
 
-    @Column({
-        name: 'longitude',
-    })
-    private readonly _longitude: number;
+    @Column()
+    longitude: number;
 
-    @Column({
-        name: 'utc',
-    })
-    private readonly _utc: number;
+    @Column()
+    utc: number;
 
-    private constructor(
+    constructor(
         name: string,
         city: string,
         country: string,
@@ -70,17 +59,17 @@ export class Airport extends BaseTypeormEntity {
         icao: string,
         latitude: number,
         longitude: number,
-        utc: number,
+        utc: number
     ) {
         super();
-        this._name = name;
-        this._city = city;
-        this._country = country;
-        this._iata = iata;
-        this._icao = icao;
-        this._latitude = latitude;
-        this._longitude = longitude;
-        this._utc = utc;
+        this.name = name;
+        this.city = city;
+        this.country = country;
+        this.iata = iata;
+        this.icao = icao;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.utc = utc;
     }
 
     static create(
@@ -116,38 +105,6 @@ export class Airport extends BaseTypeormEntity {
         ));
     }
 
-    get name(): string {
-        return this._name;
-    }
-
-    get city(): string {
-        return this._city;
-    }
-
-    get country(): string {
-        return this._country;
-    }
-
-    get iata(): string {
-        return this._iata;
-    }
-
-    get icao(): string {
-        return this._icao;
-    }
-
-    get latitude(): number {
-        return this._latitude;
-    }
-
-    get longitude(): number {
-        return this._longitude;
-    }
-
-    get utc(): number {
-        return this._utc;
-    }
-
     private static validateName(name: string) {
         return Validate.withProperty('name', name)
             .isNotEmpty()
@@ -170,14 +127,16 @@ export class Airport extends BaseTypeormEntity {
     }
 
     private static validateIata(iata: string) {
-        return Validate.withProperty('iata', iata, true)
+        return Validate.withProperty('iata', iata)
+            .isOptional()
             .isNotEmpty()
             .length(IATA_LENGTH, IATA_LENGTH)
             .isValid();
     }
 
     private static validateIcao(icao: string) {
-        return Validate.withProperty('icao', icao, true)
+        return Validate.withProperty('icao', icao)
+            .isOptional()
             .isNotEmpty()
             .length(ICAO_LENGTH, ICAO_LENGTH)
             .isValid();

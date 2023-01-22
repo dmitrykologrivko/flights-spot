@@ -6,6 +6,9 @@ import { FlightTicketDto } from './flight/flight-ticket.dto';
 export class LookupFlightOutput extends FlightDto {
 
     @Exclude()
-    tickets: FlightTicketDto[];
+    id: number;
+
+    @Exclude()
+    ticket: FlightTicketDto;
 
 }

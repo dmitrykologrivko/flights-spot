@@ -3,9 +3,9 @@ import { Logger } from '@nestjs/common';
 import {
     ApplicationService,
     ClassTransformer,
-    Err,
     InjectRepository,
-    Ok,
+    ok,
+    err,
     Result,
     PagePagination,
     FilterChain,
@@ -36,7 +36,7 @@ export class AircraftService {
                 results: ClassTransformer.toClassObjects(AircraftDto, response.results),
             })) as GetAircraftsOutput;
 
-        return Ok(output);
+        return ok(output);
     }
 
     async syncAircrafts(): SyncAircraftsResult {
@@ -44,9 +44,9 @@ export class AircraftService {
 
         const getAircraftsResult = await this.aircraftSource.getAircrafts();
 
-        if (getAircraftsResult.is_err()) {
+        if (getAircraftsResult.isErr()) {
             Logger.warn(`Downloading aircrafts unsuccessful`);
-            return Err(getAircraftsResult.unwrap_err());
+            return err(getAircraftsResult.unwrapErr());
         }
 
         const dto = getAircraftsResult.unwrap();
@@ -64,9 +64,9 @@ export class AircraftService {
             for (const item of dto) {
                 const aircraft = await repository.findOne({
                     where: {
-                        _name: item.name,
-                        _iata: item.iata,
-                        _icao: item.icao,
+                        name: item.name,
+                        iata: item.iata,
+                        icao: item.icao,
                     },
                 });
 
@@ -82,7 +82,7 @@ export class AircraftService {
                     item.icao,
                 );
 
-                if (createAircraftResult.is_ok()) {
+                if (createAircraftResult.isOk()) {
                     await repository.save(createAircraftResult.unwrap());
                     saved++;
                 } else {
@@ -96,6 +96,6 @@ export class AircraftService {
             `Sync aircrafts has been completed. Saved: ${saved}, Invalid:${invalid}, Skipped: ${skipped}`
         );
 
-        return Ok(null);
+        return ok(null);
     }
 }

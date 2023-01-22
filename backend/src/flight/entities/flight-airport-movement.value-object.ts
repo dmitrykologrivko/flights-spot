@@ -3,58 +3,40 @@ import { Airport } from '@airport/airport.entity';
 
 export abstract class FlightAirportMovement extends BaseValueObject {
 
-    protected readonly _actualTimeLocal: string;
+    actualTimeLocal: string;
 
-    protected readonly _actualTimeUtc: string;
+    actualTimeUtc: string;
 
-    protected readonly _scheduledTimeLocal: string;
+    scheduledTimeLocal: string;
 
-    protected readonly _scheduledTimeUtc: string;
+    scheduledTimeUtc: string;
 
-    protected readonly _airport: Airport;
+    airport: Airport;
 
-    protected constructor(
+    constructor(
         actualTimeLocal: string,
         actualTimeUtc: string,
         scheduledTimeLocal: string,
         scheduledTimeUtc: string,
-        airport: Airport,
+        airport: Airport
     ) {
         super();
-        this._actualTimeLocal = actualTimeLocal;
-        this._actualTimeUtc = actualTimeUtc;
-        this._scheduledTimeLocal = scheduledTimeLocal;
-        this._scheduledTimeUtc = scheduledTimeUtc;
-        this._airport = airport;
-    }
-
-    get actualTimeLocal(): string {
-        return this._actualTimeLocal;
-    }
-
-    get actualTimeUtc(): string {
-        return this._actualTimeUtc;
-    }
-
-    get scheduledTimeLocal(): string {
-        return this._scheduledTimeLocal;
-    }
-
-    get scheduledTimeUtc(): string {
-        return this._scheduledTimeUtc;
-    }
-
-    get airport(): Airport {
-        return this._airport;
+        this.actualTimeLocal = actualTimeLocal;
+        this.actualTimeUtc = actualTimeUtc;
+        this.scheduledTimeLocal = scheduledTimeLocal;
+        this.scheduledTimeUtc = scheduledTimeUtc;
+        this.airport = airport;
     }
 
     protected static validateActualTimeLocal(actualTimeLocal: string) {
-        return Validate.withProperty('actualTimeLocal', actualTimeLocal, true)
+        return Validate.withProperty('actualTimeLocal', actualTimeLocal)
+            .isOptional()
             .isValid();
     }
 
     protected static validateActualTimeUtc(actualTimeUtc: string) {
-        return Validate.withProperty('actualTimeUtc', actualTimeUtc, true)
+        return Validate.withProperty('actualTimeUtc', actualTimeUtc)
+            .isOptional()
             .isValid();
     }
 

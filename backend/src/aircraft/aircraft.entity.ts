@@ -13,34 +13,31 @@ export const ICAO_MIN_LENGTH = 3;
 export const ICAO_MAX_LENGTH = 4;
 
 @Entity()
-@Unique(['_name', '_iata', '_icao'])
+@Unique(['name', 'iata', 'icao'])
 export class Aircraft extends BaseTypeormEntity {
 
     @Column({
-        name: 'name',
-        length: NAME_MAX_LENGTH,
+        length: NAME_MAX_LENGTH
     })
-    private readonly _name: string;
+    name: string;
 
     @Column({
-        name: 'iata',
         length: IATA_LENGTH,
         nullable: true,
     })
-    private readonly _iata: string;
+    iata: string;
 
     @Column({
-        name: 'icao',
         length: ICAO_MAX_LENGTH,
         nullable: true,
     })
-    private readonly _icao: string;
+    icao: string;
 
-    private constructor(name: string, iata: string, icao: string) {
+    constructor(name: string, iata: string, icao: string) {
         super();
-        this._name = name;
-        this._iata = iata;
-        this._icao = icao;
+        this.name = name;
+        this.iata = iata;
+        this.icao = icao;
     }
 
     static create(
@@ -57,18 +54,6 @@ export class Aircraft extends BaseTypeormEntity {
         return validateResult.map(() => new Aircraft(name, iata, icao));
     }
 
-    get name(): string {
-        return this._name;
-    }
-
-    get icao(): string {
-        return this._icao;
-    }
-
-    get iata(): string {
-        return this._iata;
-    }
-
     private static validateName(name: string) {
         return Validate.withProperty('name', name)
             .isNotEmpty()
@@ -77,14 +62,16 @@ export class Aircraft extends BaseTypeormEntity {
     }
 
     private static validateIata(iata: string) {
-        return Validate.withProperty('iata', iata, true)
+        return Validate.withProperty('iata', iata)
+            .isOptional()
             .isNotEmpty()
             .length(IATA_LENGTH, IATA_LENGTH)
             .isValid();
     }
 
     private static validateIcao(icao: string) {
-        return Validate.withProperty('icao', icao, true)
+        return Validate.withProperty('icao', icao)
+            .isOptional()
             .length(ICAO_MIN_LENGTH, ICAO_MAX_LENGTH)
             .isValid();
     }
